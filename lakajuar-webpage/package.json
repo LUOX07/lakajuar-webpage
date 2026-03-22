@@ -1,0 +1,24 @@
+{
+  "name": "lakajuar-webpage",
+  "version": "1.0.0",
+  "description": "A virtual store for LAKAJUAR featuring accessories and jewelry.",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "live-server src",
+    "build": "echo 'Build step not defined'",
+    "test": "echo 'Test step not defined'"
+  },
+  "keywords": [
+    "ecommerce",
+    "store",
+    "accessories",
+    "jewelry"
+  ],
+  "author": "LAKAJUAR",
+  "license": "MIT",
+  "dependencies": {
+    "live-server": "^1.2.1"
+  },
+  "devDependencies": {},
+  "homepage": "https://www.instagram.com/lakajuar_acc/"
+}

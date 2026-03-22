@@ -1,0 +1,23 @@
+{
+  "name": "lakajuar-webpage",
+  "version": "1.0.0",
+  "description": "A webpage for LAKAJUAR showcasing products and services.",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "live-server src",
+    "build": "echo 'Build process not defined yet.'"
+  },
+  "keywords": [
+    "LAKAJUAR",
+    "webpage",
+    "html",
+    "css",
+    "javascript"
+  ],
+  "author": "LAKAJUAR Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "live-server": "^1.2.1"
+  }
+}

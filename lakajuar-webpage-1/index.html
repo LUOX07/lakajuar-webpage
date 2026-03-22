@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAKAJUAR - Tienda virtual</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a href="https://lakajuar_acc.com.py" class="logo-container-link">
+      <div class="logo-container">
+        <img src="images/logo.svg" alt="LAKAJUAR logo" class="logo" />
+        <div>
+          <h1>LAKAJUAR</h1>
+          <p>Accesorios que brillan</p>
+        </div>
+      </div>
+    </a>
+  </header>
+
+  <main class="main-content">
+    <section id="telefonos" class="shop-section">
+      <h2>Accesorios de teléfono</h2>
+      <div class="product-grid" id="phone-products"></div>
+    </section>
+
+    <section id="joyas" class="shop-section">
+      <h2>Joyas</h2>
+      <div class="product-grid" id="jewelry-products"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Síguenos en Instagram: <a href="https://www.instagram.com/lakajuar_acc/" target="_blank" rel="noreferrer">lakajuar_acc</a></p>
+    <p>Visita nuestro sitio: <a href="https://lakajuar_acc.com.py">https://lakajuar_acc.com.py</a></p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
+
+const phoneProducts = [
+  { name: "Funda glitter iPhone", price: "$15", img: "https://via.placeholder.com/400x300?text=Funda+iPhone", desc: "Protección y brillo para tu teléfono." },
+  { name: "Cargador rápido USB-C", price: "$12", img: "https://via.placeholder.com/400x300?text=Cargador+USB-C", desc: "Carga segura y rápida." },
+  { name: "Soporte magnético", price: "$18", img: "https://via.placeholder.com/400x300?text=Soporte+magnetico", desc: "Soporte para auto y escritorio." },
+];
+const jewelryProducts = [
+  { name: "Collar dorado", price: "$25", img: "https://via.placeholder.com/400x300?text=Collar+dorado", desc: "Elegante y resistente a la oxidación." },
+  { name: "Pulsera brillante", price: "$20", img: "https://via.placeholder.com/400x300?text=Pulsera+brillante", desc: "Diseño moderno para cualquier ocasión." },
+  { name: "Aretes de plata", price: "$22", img: "https://via.placeholder.com/400x300?text=Aretes+plata", desc: "Acabado fino y cómodo." },
+];
+
+function renderProducts(containerId, products) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = products.map(item => `
+    <article class="product-card">
+      <img src="${item.img}" alt="${item.name}" />
+      <h3>${item.name}</h3>
+      <p>${item.desc}</p>
+      <div class="price">${item.price}</div>
+      <button class="btn">Agregar al carrito</button>
+    </article>
+  `).join("");
+}
+
+renderProducts("phone-products", phoneProducts);
+renderProducts("jewelry-products", jewelryProducts);
