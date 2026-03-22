@@ -89,29 +89,39 @@ body {
 
 .category-buttons, .category-tabs {
     display: flex;
-    gap: 8px;
+    gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 12px;
+    margin-bottom: 20px;
+    justify-content: center;
 }
 
 .tab-button, .category-buttons button {
-    background: #e8f0fe;
-    border: 1px solid #b4c6eb;
+    background: #fff;
+    border: 2px solid #d8e2f2;
     color: #1b3d8b;
-    border-radius: 6px;
-    padding: 7px 12px;
+    border-radius: 14px;
+    padding: 12px 20px;
     cursor: pointer;
-    font-weight: 700;
+    font-weight: 900;
+    font-size: 1.1rem;
+    box-shadow: 0 8px 18px rgba(16, 54, 109, 0.15);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, color 0.25s ease;
 }
 
 .tab-button.active, .category-buttons button.active {
-    background: #4a90e2;
+    background: linear-gradient(110deg, #ff7a00, #ffd200);
     color: #fff;
-    border-color: #2a65a8;
+    border-color: transparent;
+    box-shadow: 0 12px 32px rgba(255, 130, 0, 0.45);
 }
 
 .tab-button:hover, .category-buttons button:hover {
-    opacity: 0.9;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(16, 54, 109, 0.24);
+}
+
+.tab-button:active, .category-buttons button:active {
+    transform: translateY(0);
 }
 
 .cart-status {
