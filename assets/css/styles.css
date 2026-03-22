@@ -1,42 +1,129 @@
 body {
-    margin: 0;
     font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
     background-color: #f4f4f4;
 }
 
-header {
+.site-header {
     background: #333;
     color: #fff;
-    padding: 10px 0;
-    text-align: center;
+    padding: 12px 0;
 }
 
-nav {
-    margin: 20px 0;
-}
-
-nav a {
-    color: #fff;
+.logo-container-link {
     text-decoration: none;
-    padding: 10px 15px;
+    color: inherit;
+    display: inline-flex;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    align-items: center;
+    gap: 15px;
+    padding-left: 24px;
 }
 
-nav a:hover {
-    background: #575757;
+.logo-container-link:hover {
+    opacity: 0.8;
 }
 
-.container {
-    width: 80%;
-    margin: auto;
-    overflow: hidden;
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 15px;
+}
+
+.logo-container img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    display: block;
+}
+
+.logo-container h1 {
+    margin: 0;
+    font-size: 2em;
+    color: #fff;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.logo-container p {
+    margin: 5px 0 0 0;
+    color: #ccc;
+    font-size: 1em;
+}
+
+.main-content {
+    max-width: 1150px;
+    margin: 24px auto;
+    padding: 0 20px;
+}
+
+.shop-section {
+    margin-bottom: 22px;
+}
+
+.shop-section h2 {
+    margin-bottom: 14px;
+    color: #333;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.product-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    padding: 12px;
+}
+
+.product-card img {
+    width: 100%;
+    border-radius: 6px;
+}
+
+.product-card h3 {
+    margin: 8px 0 6px;
+}
+
+.product-card p {
+    margin: 0 0 8px;
+    color: #555;
+}
+
+.price {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.btn {
+    display: inline-block;
+    background: #4a90e2;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 7px 14px;
+    cursor: pointer;
 }
 
 footer {
+    text-align: center;
+    padding: 18px 0;
     background: #333;
     color: #fff;
-    text-align: center;
-    padding: 10px 0;
-    position: relative;
-    bottom: 0;
-    width: 100%;
+    margin-top: 24px;
+}
+
+footer a {
+    color: #79b8ff;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
 }

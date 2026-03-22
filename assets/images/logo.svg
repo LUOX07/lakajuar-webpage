@@ -1,0 +1,22 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#d4af85" stroke="#a88a4a" stroke-width="3"/>
+  
+  <!-- Inner lighter circle -->
+  <circle cx="100" cy="100" r="85" fill="#e8d5b7"/>
+  
+  <!-- Decorative top line -->
+  <line x1="50" y1="45" x2="150" y2="45" stroke="#a88a4a" stroke-width="2"/>
+  
+  <!-- Main text - LAKAJUAR -->
+  <text x="100" y="100" font-family="'Georgia', serif" font-size="52" font-weight="bold" text-anchor="middle" fill="#a88a4a" letter-spacing="2">
+    LAKAJUAR
+  </text>
+  
+  <!-- Decorative bottom line -->
+  <line x1="50" y1="155" x2="150" y2="155" stroke="#a88a4a" stroke-width="2"/>
+  
+  <!-- Small decorative sparkles -->
+  <circle cx="45" cy="100" r="3" fill="#c9a961"/>
+  <circle cx="155" cy="100" r="3" fill="#c9a961"/>
+</svg>
