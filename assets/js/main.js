@@ -1,10 +1,11 @@
 const products = [
-  { id: 1, category: 'telefonos', name: 'Funda glitter iPhone', price: 15, img: 'https://via.placeholder.com/400x300?text=Funda+iPhone', desc: 'Protección y brillo para tu teléfono.' },
-  { id: 2, category: 'telefonos', name: 'Cargador rápido USB-C', price: 12, img: 'https://via.placeholder.com/400x300?text=Cargador+USB-C', desc: 'Carga segura y rápida.' },
-  { id: 3, category: 'telefonos', name: 'Soporte magnético', price: 18, img: 'https://via.placeholder.com/400x300?text=Soporte+magnetico', desc: 'Soporte para auto y escritorio.' },
-  { id: 4, category: 'joyas', name: 'Collar dorado', price: 25, img: 'https://via.placeholder.com/400x300?text=Collar+dorado', desc: 'Elegante y resistente a la oxidación.' },
-  { id: 5, category: 'joyas', name: 'Pulsera brillante', price: 20, img: 'https://via.placeholder.com/400x300?text=Pulsera+brillante', desc: 'Diseño moderno para cualquier ocasión.' },
-  { id: 6, category: 'joyas', name: 'Aretes de plata', price: 22, img: 'https://via.placeholder.com/400x300?text=Aretes+plata', desc: 'Acabado fino y cómodo.' }
+  { id: 1, category: 'joyas', name: 'Collar dorado', price: 25, img: 'https://via.placeholder.com/400x300?text=Collar+dorado', desc: 'Elegante y resistente a la oxidación.' },
+  { id: 2, category: 'joyas', name: 'Pulsera brillante', price: 20, img: 'https://via.placeholder.com/400x300?text=Pulsera+brillante', desc: 'Diseño moderno para cualquier ocasión.' },
+  { id: 3, category: 'joyas', name: 'Aretes de plata', price: 22, img: 'https://via.placeholder.com/400x300?text=Aretes+plata', desc: 'Acabado fino y cómodo.' },
+  { id: 4, category: 'cases', name: 'Case transparente', price: 18, img: 'https://via.placeholder.com/400x300?text=Case+transparente', desc: 'Protección slim sin perder diseño.' },
+  { id: 5, category: 'cases', name: 'Case con glitter', price: 20, img: 'https://via.placeholder.com/400x300?text=Case+glitter', desc: 'Brillo elegante para tu smartphone.' },
+  { id: 6, category: 'accesorios', name: 'Cargador rápido USB-C', price: 12, img: 'https://via.placeholder.com/400x300?text=Cargador+USB-C', desc: 'Carga segura y rápida.' },
+  { id: 7, category: 'accesorios', name: 'Soporte magnético', price: 18, img: 'https://via.placeholder.com/400x300?text=Soporte+magnetico', desc: 'Soporte para auto y escritorio.' }
 ];
 
 let cart = JSON.parse(localStorage.getItem('lakajuarCart') || '[]');
@@ -223,13 +224,22 @@ buttons.forEach(button => {
   });
 });
 
+const tabs = document.querySelectorAll('.tab-button');
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    filterProducts(tab.getAttribute('data-cat'), document.getElementById('search-input').value);
+  });
+});
+
 const searchInput = document.getElementById('search-input');
 searchInput.addEventListener('input', () => {
   const active = document.querySelector('.category-buttons button.active').getAttribute('data-cat');
   filterProducts(active, searchInput.value);
 });
 
-renderProducts(products);
+filterProducts('joyas', '');
 saveCart();
 setupCartDrawerEvents();
 
