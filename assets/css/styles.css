@@ -34,14 +34,16 @@ body {
 }
 
 .logo-container img {
-    width: 150px;
-    height: auto;
+    width: 180px;
+    height: 180px;
     object-fit: contain;
     display: block;
-    border: 1px solid rgba(255,255,255,0.35);
+    border: 2px solid rgba(255,255,255,0.45);
     border-radius: 50%;
     background: #fff;
-    padding: 8px;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
 
 .logo-container h1 {
     margin: 0;
@@ -62,7 +64,7 @@ body {
     color: #fff;
     padding: 20px 24px;
     box-shadow: 0 2px 14px rgba(0,0,0,0.4);
-
+}
 .logo-container p {
     margin: 5px 0 0 0;
     color: #ccc;
