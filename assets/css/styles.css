@@ -208,8 +208,93 @@ body {
     border-top: 1px solid #ddd;
     background: #fff;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cart-total-line {
+    display: flex;
     justify-content: space-between;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.cart-total-line.total {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #1a73e8;
+}
+
+.coupon-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+}
+
+.coupon-section input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.coupon-section button {
+    border: none;
+    border-radius: 6px;
+    background: #4a90e2;
+    color: #fff;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.coupon-section button:hover {
+    opacity: 0.9;
+}
+
+.coupon-message {
+    display: block;
+    font-size: 0.8rem;
+    margin: 0 14px 10px;
+    color: #27ae60;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #ececec;
+}
+
+.cart-item .item-details {
+    max-width: 55%;
+}
+
+.cart-item .item-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.qty-btn,
+.remove-item {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    line-height: 1;
+    font-size: 1rem;
+    display: grid;
+    place-items: center;
+}
+
+.qty-btn:hover,
+.remove-item:hover {
+    background: #f1f1f1;
 }
 
 @keyframes cart-bounce {
