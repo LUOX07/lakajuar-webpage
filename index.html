@@ -8,7 +8,7 @@
 </head>
 <body>
   <header class="site-header">
-    <a href="https://LUOX07.github.io/lakajuar-webpage" class="logo-container-link">
+    <a href="https://lakajuar.com.py" class="logo-container-link">
       <div class="logo-container">
         <img src="assets/images/logo.svg" alt="LAKAJUAR logo" class="logo" />
         <div>
@@ -17,17 +17,21 @@
         </div>
       </div>
     </a>
+    <div class="shop-controls">
+      <input id="search-input" type="search" placeholder="Buscar productos..." />
+      <div class="category-buttons">
+        <button data-cat="all" class="active">Todos</button>
+        <button data-cat="telefonos">Teléfonos</button>
+        <button data-cat="joyas">Joyas</button>
+      </div>
+      <div class="cart-status">Carrito: <span id="cart-count">0</span></div>
+    </div>
   </header>
 
   <main class="main-content">
-    <section id="telefonos" class="shop-section">
-      <h2>Accesorios de teléfono</h2>
-      <div class="product-grid" id="phone-products"></div>
-    </section>
-
-    <section id="joyas" class="shop-section">
-      <h2>Joyas</h2>
-      <div class="product-grid" id="jewelry-products"></div>
+    <section class="shop-section" aria-label="Productos">
+      <h2>Productos</h2>
+      <div class="product-grid" id="product-grid"></div>
     </section>
   </main>
 
