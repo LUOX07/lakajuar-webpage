@@ -40,6 +40,22 @@
     </section>
   </main>
 
+  <button id="cart-toggle-btn" class="floating-cart-btn" aria-label="Abrir carrito" title="Ver carrito">
+    🛒 <span id="floating-cart-count">0</span>
+  </button>
+
+  <aside id="cart-drawer" class="cart-drawer" aria-label="Carrito de compras" aria-live="polite">
+    <div class="cart-drawer-header">
+      <h3>Tu carrito</h3>
+      <button id="close-cart-drawer" aria-label="Cerrar carrito">✕</button>
+    </div>
+    <div id="cart-items" class="cart-items"></div>
+    <div class="cart-drawer-footer">
+      <div>Total: <strong id="cart-total">$0.00</strong></div>
+      <button id="checkout-btn" class="btn">Ir a pagar</button>
+    </div>
+  </aside>
+
   <footer class="site-footer">
     <p>Síguenos en Instagram: <a href="https://www.instagram.com/lakajuar_acc/" target="_blank" rel="noreferrer">lakajuar_acc</a></p>
     <p>Visita nuestro sitio: <a href="https://LUOX07.github.io/lakajuar-webpage">https://LUOX07.github.io/lakajuar-webpage</a></p>

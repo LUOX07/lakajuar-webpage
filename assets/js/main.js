@@ -9,14 +9,60 @@ const products = [
 
 let cart = JSON.parse(localStorage.getItem('lakajuarCart') || '[]');
 
+function formatMoney(value) {
+  return `$${value.toFixed(2)}`;
+}
+
 function saveCart() {
   localStorage.setItem('lakajuarCart', JSON.stringify(cart));
   document.getElementById('cart-count').textContent = cart.length;
+  const floatingCount = document.getElementById('floating-cart-count');
+  if (floatingCount) floatingCount.textContent = cart.length;
+
   const cartStatus = document.querySelector('.cart-status');
   if (cartStatus) {
     cartStatus.classList.add('cart-bounce');
     setTimeout(() => cartStatus.classList.remove('cart-bounce'), 400);
   }
+
+  renderCartDrawer();
+}
+
+function calculateCartTotal() {
+  return cart.reduce((sum, item) => sum + item.price, 0);
+}
+
+function renderCartDrawer() {
+  const itemsContainer = document.getElementById('cart-items');
+  const totalNode = document.getElementById('cart-total');
+  if (!itemsContainer || !totalNode) return;
+
+  if (cart.length === 0) {
+    itemsContainer.innerHTML = '<p>Tu carrito está vacío.</p>';
+  } else {
+    itemsContainer.innerHTML = cart.map((item, idx) => `
+      <div class="cart-item">
+        <div>
+          <div class="item-name">${item.name}</div>
+          <div class="item-price">${formatMoney(item.price)}</div>
+        </div>
+        <button class="remove-item" data-index="${idx}" aria-label="Quitar ${item.name}">x</button>
+      </div>
+    `).join('');
+  }
+
+  totalNode.textContent = formatMoney(calculateCartTotal());
+
+  const btns = document.querySelectorAll('.remove-item');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const index = Number(btn.getAttribute('data-index'));
+      if (!Number.isNaN(index)) {
+        cart.splice(index, 1);
+        saveCart();
+      }
+    });
+  });
 }
 
 function renderProducts(productList) {
@@ -66,3 +112,38 @@ searchInput.addEventListener('input', () => {
 
 renderProducts(products);
 saveCart();
+
+const cartDrawer = document.getElementById('cart-drawer');
+const cartToggleBtn = document.getElementById('cart-toggle-btn');
+const closeCartDrawerBtn = document.getElementById('close-cart-drawer');
+const checkoutBtn = document.getElementById('checkout-btn');
+
+function openCartDrawer() {
+  if (cartDrawer) cartDrawer.classList.add('open');
+}
+
+function closeCartDrawer() {
+  if (cartDrawer) cartDrawer.classList.remove('open');
+}
+
+if (cartToggleBtn) cartToggleBtn.addEventListener('click', openCartDrawer);
+if (closeCartDrawerBtn) closeCartDrawerBtn.addEventListener('click', closeCartDrawer);
+if (checkoutBtn) {
+  checkoutBtn.addEventListener('click', () => {
+    if (cart.length === 0) {
+      alert('Tu carrito está vacío. Agrega productos antes de pagar.');
+      return;
+    }
+    alert(`Total a pagar ${formatMoney(calculateCartTotal())}. Gracias por comprar en LAKAJUAR.`);
+    cart = [];
+    saveCart();
+    closeCartDrawer();
+  });
+}
+
+if (cartDrawer) {
+  cartDrawer.addEventListener('click', (event) => {
+    if (event.target === cartDrawer) closeCartDrawer();
+  });
+}
+
