@@ -19,7 +19,7 @@ body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     color: var(--ink-900);
-    background: radial-gradient(circle at 15% 10%, #fff5cf 0%, #f3dc9d 45%, #e6c26f 100%);
+    background: radial-gradient(circle at 15% 10%, #fff7ef 0%, #f6eee8 45%, #f2e7df 100%);
 }
 
 body::before {
@@ -29,7 +29,7 @@ body::before {
     width: 420px;
     height: 420px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(212, 165, 76, 0.32), rgba(212, 165, 76, 0));
+    background: radial-gradient(circle, rgba(236, 180, 136, 0.28), rgba(236, 180, 136, 0));
     pointer-events: none;
     z-index: -1;
     animation: drift 14s ease-in-out infinite;
@@ -42,7 +42,7 @@ body::before {
     gap: 20px;
     flex-wrap: wrap;
     padding: 16px 30px;
-    background: linear-gradient(125deg, var(--navy-900), var(--navy-700));
+    background: linear-gradient(125deg, #aa7930, #d8aa56);
     color: var(--white);
     border-bottom: 3px solid rgba(236, 180, 136, 0.55);
     box-shadow: 0 10px 30px rgba(11, 16, 35, 0.35);
