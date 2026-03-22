@@ -34,19 +34,35 @@ body {
 }
 
 .logo-container img {
-    width: 80px;
-    height: 80px;
+    width: 120px;
+    height: auto;
     object-fit: contain;
     display: block;
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 50%;
+    background: #fff;
+    padding: 7px;
 }
 
 .logo-container h1 {
     margin: 0;
-    font-size: 2em;
+    font-size: 2.2em;
     color: #fff;
-    font-weight: bold;
-    letter-spacing: 2px;
+    font-weight: 800;
+    letter-spacing: 4px;
 }
+
+.logo-container p {
+    margin: 2px 0 0 0;
+    font-size: 1.0rem;
+    color: #f1f1f1;
+}
+
+.site-header {
+    background: #11162a;
+    color: #fff;
+    padding: 20px 24px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.4);
 
 .logo-container p {
     margin: 5px 0 0 0;
