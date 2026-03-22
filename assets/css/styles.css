@@ -239,6 +239,11 @@ body {
     border-radius: 6px;
 }
 
+.coupon-label {
+    font-weight: 700;
+    margin-right: 8px;
+    white-space: nowrap;
+}
 .coupon-section button {
     border: none;
     border-radius: 6px;
