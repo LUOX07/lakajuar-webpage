@@ -215,15 +215,6 @@ function filterProducts(category, query) {
   renderProducts(filtered);
 }
 
-const buttons = document.querySelectorAll('.category-buttons button');
-buttons.forEach(button => {
-  button.addEventListener('click', () => {
-    buttons.forEach(b => b.classList.remove('active'));
-    button.classList.add('active');
-    filterProducts(button.getAttribute('data-cat'), document.getElementById('search-input').value);
-  });
-});
-
 const tabs = document.querySelectorAll('.tab-button');
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
@@ -235,7 +226,8 @@ tabs.forEach(tab => {
 
 const searchInput = document.getElementById('search-input');
 searchInput.addEventListener('input', () => {
-  const active = document.querySelector('.category-buttons button.active').getAttribute('data-cat');
+  const activeTab = document.querySelector('.tab-button.active');
+  const active = activeTab ? activeTab.getAttribute('data-cat') : 'joyas';
   filterProducts(active, searchInput.value);
 });
 
