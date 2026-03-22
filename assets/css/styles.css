@@ -318,6 +318,18 @@ body {
     color: #333;
 }
 
+.promo-notice {
+    font-weight: 700;
+    color: #111;
+    background: #fff9c4;
+    border: 1px solid #fdd835;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    text-align: center;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
 .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
