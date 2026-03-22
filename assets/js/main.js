@@ -1,7 +1,7 @@
 const products = [
-  { id: 1, category: 'joyas', name: 'Collar dorado', price: 25, img: 'https://via.placeholder.com/400x300?text=Collar+dorado', desc: 'Elegante y resistente a la oxidación.' },
-  { id: 2, category: 'joyas', name: 'Pulsera brillante', price: 20, img: 'https://via.placeholder.com/400x300?text=Pulsera+brillante', desc: 'Diseño moderno para cualquier ocasión.' },
-  { id: 3, category: 'joyas', name: 'Aretes de plata', price: 22, img: 'https://via.placeholder.com/400x300?text=Aretes+plata', desc: 'Acabado fino y cómodo.' },
+  { id: 1, category: 'joyas', name: 'Collar LAKAJUAR', price: 60000, img: 'https://via.placeholder.com/400x300?text=Collar+LAKAJUAR', desc: 'Collar delicado y elegante para uso diario.' },
+  { id: 2, category: 'joyas', name: 'Aros LAKAJUAR', price: 10000, img: 'https://via.placeholder.com/400x300?text=Aros+LAKAJUAR', desc: 'Aros finos y livianos para cualquier ocasión.' },
+  { id: 3, category: 'joyas', name: 'Set de aros mini', price: 10000, img: 'https://via.placeholder.com/400x300?text=Set+Aros+Mini', desc: 'Set de aros pequeños con diseño moderno.' },
   { id: 4, category: 'cases', name: 'Case transparente', price: 18, img: 'https://via.placeholder.com/400x300?text=Case+transparente', desc: 'Protección slim sin perder diseño.' },
   { id: 5, category: 'cases', name: 'Case con glitter', price: 20, img: 'https://via.placeholder.com/400x300?text=Case+glitter', desc: 'Brillo elegante para tu smartphone.' },
   { id: 6, category: 'accesorios', name: 'Cargador rápido USB-C', price: 12, img: 'https://via.placeholder.com/400x300?text=Cargador+USB-C', desc: 'Carga segura y rápida.' },
@@ -12,7 +12,7 @@ let cart = JSON.parse(localStorage.getItem('lakajuarCart') || '[]');
 let activeDiscount = JSON.parse(localStorage.getItem('lakajuarDiscount') || '0');
 
 function formatMoney(value) {
-  return `$${value.toFixed(2)}`;
+  return `Gs. ${Math.round(value).toLocaleString('es-PY')}`;
 }
 
 function getCartItems() {
@@ -32,8 +32,8 @@ function calculateCartSubtotal() {
 
 function calculateShipping(subtotal) {
   if (subtotal === 0) return 0;
-  if (subtotal >= 100) return 0;
-  return 8;
+  if (subtotal >= 120000) return 0;
+  return 15000;
 }
 
 function calculateCartTotal() {
@@ -192,7 +192,7 @@ function renderProducts(productList) {
       <img src="${p.img}" alt="${p.name}" />
       <h3>${p.name}</h3>
       <p>${p.desc}</p>
-      <div class="price">$${p.price}.00</div>
+      <div class="price">${formatMoney(p.price)}</div>
       <button class="btn" onclick="addToCart(${p.id})">Agregar al carrito</button>
     </article>
   `).join('');
