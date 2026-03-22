@@ -12,6 +12,11 @@ let cart = JSON.parse(localStorage.getItem('lakajuarCart') || '[]');
 function saveCart() {
   localStorage.setItem('lakajuarCart', JSON.stringify(cart));
   document.getElementById('cart-count').textContent = cart.length;
+  const cartStatus = document.querySelector('.cart-status');
+  if (cartStatus) {
+    cartStatus.classList.add('cart-bounce');
+    setTimeout(() => cartStatus.classList.remove('cart-bounce'), 400);
+  }
 }
 
 function renderProducts(productList) {

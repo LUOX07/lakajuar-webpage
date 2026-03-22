@@ -25,7 +25,11 @@
         <button data-cat="telefonos">Teléfonos</button>
         <button data-cat="joyas">Joyas</button>
       </div>
-      <div class="cart-status">Carrito: <span id="cart-count">0</span></div>
+      <div class="cart-status" role="status" aria-live="polite">
+        <span class="cart-icon" aria-hidden="true">🛒</span>
+        <span>Carrito</span>
+        <strong id="cart-count">0</strong>
+      </div>
     </div>
   </header>
 
