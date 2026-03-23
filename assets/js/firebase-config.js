@@ -1,10 +1,10 @@
 export const firebaseConfig = {
-  apiKey: "REEMPLAZA_API_KEY",
-  authDomain: "REEMPLAZA_AUTH_DOMAIN",
-  projectId: "REEMPLAZA_PROJECT_ID",
-  storageBucket: "REEMPLAZA_STORAGE_BUCKET",
-  messagingSenderId: "REEMPLAZA_MESSAGING_SENDER_ID",
-  appId: "REEMPLAZA_APP_ID",
+  apiKey: "AIzaSyCDEDkrvMr5JeW0Zx5bQveAj3_LL-WNLrw",
+  authDomain: "lakajuar-7d632.firebaseapp.com",
+  projectId: "lakajuar-7d632",
+  storageBucket: "lakajuar-7d632.firebasestorage.app",
+  messagingSenderId: "36431686822",
+  appId: "1:36431686822:web:e7831e61a5b707ab9c1867",
 };
 
 // Solo estos correos pueden ser administradores.
