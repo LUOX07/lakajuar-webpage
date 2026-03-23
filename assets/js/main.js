@@ -454,6 +454,19 @@ async function upsertUserProfile(user, displayName = "") {
   currentUserProfile = latest.exists() ? latest.data() : { role: "cliente", email: user.email };
 }
 
+async function ensureUserProfile(user, displayName = "") {
+  try {
+    await upsertUserProfile(user, displayName);
+  } catch {
+    // If Firestore rules block profile read/write, keep auth session alive with a safe fallback role.
+    currentUserProfile = {
+      uid: user.uid,
+      email: user.email,
+      role: isAdminEmail(user.email || "") ? "admin" : "cliente",
+    };
+  }
+}
+
 function updateAuthUI() {
   const user = auth.currentUser;
   const isLogged = !!user;
@@ -623,12 +636,12 @@ function bindUIEvents() {
     try {
       if (isRegisterMode) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await upsertUserProfile(cred.user, name || "Cliente");
+        await ensureUserProfile(cred.user, name || "Cliente");
         showAuthMessage("Cuenta cliente creada correctamente.");
         showToast("Cuenta creada correctamente. Bienvenido a LAKAJUAR.", "success");
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
-        await upsertUserProfile(cred.user);
+        await ensureUserProfile(cred.user);
         showAuthMessage("Ingreso correcto.");
         showToast("Ingreso correcto. Bienvenido nuevamente.", "success");
       }
