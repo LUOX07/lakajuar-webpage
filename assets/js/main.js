@@ -406,6 +406,23 @@ function getFriendlyAuthError(errorCode, registerMode) {
   }
 }
 
+function getFriendlyDataError(error) {
+  const code = error?.code || "";
+  if (code === "permission-denied") {
+    return "No tienes permisos para esta accion. Verifica reglas de Firestore/Storage y que hayas iniciado sesion con el admin.";
+  }
+  if (code === "storage/unauthorized") {
+    return "No se pudo subir la imagen: Storage no autoriza esta cuenta. Revisa las reglas de Storage.";
+  }
+  if (code === "storage/object-not-found") {
+    return "No se encontro el archivo de imagen seleccionado.";
+  }
+  if (code === "unauthenticated") {
+    return "Debes iniciar sesion para administrar productos.";
+  }
+  return `No se pudo completar la operacion (${code || "error-desconocido"}).`;
+}
+
 function setAuthMode(registerMode) {
   isRegisterMode = registerMode;
   if (!ui.authTitle || !ui.authSubmitBtn || !ui.authName || !ui.loginModeBtn || !ui.registerModeBtn) return;
@@ -557,7 +574,12 @@ function renderAdminProducts() {
       const id = btn.getAttribute("data-delete-id");
       if (!id) return;
       if (!confirm("¿Eliminar este producto?")) return;
-      await deleteDoc(doc(db, "products", id));
+      try {
+        await deleteDoc(doc(db, "products", id));
+        showToast("Producto eliminado correctamente.", "success");
+      } catch (error) {
+        alert(getFriendlyDataError(error));
+      }
     });
   });
 }
@@ -656,7 +678,10 @@ function bindUIEvents() {
 
   ui.productForm?.addEventListener("submit", async event => {
     event.preventDefault();
-    if (currentUserProfile?.role !== "admin") return;
+    if (currentUserProfile?.role !== "admin") {
+      alert("Solo la cuenta admin puede crear o editar productos.");
+      return;
+    }
 
     const id = ui.productId.value;
     const name = ui.productName.value.trim();
@@ -701,9 +726,10 @@ function bindUIEvents() {
         });
       }
 
+      showToast(id ? "Producto actualizado correctamente." : "Producto creado correctamente.", "success");
       resetProductForm();
     } catch (error) {
-      alert(`No se pudo guardar el producto: ${error.message}`);
+      alert(getFriendlyDataError(error));
     }
   });
 
