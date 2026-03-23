@@ -9,5 +9,5 @@ export const firebaseConfig = {
 
 // Solo estos correos pueden ser administradores.
 export const ADMIN_EMAILS = [
-  "tu-correo-admin@ejemplo.com",
+  "lakajuar@gmail.com",
 ];
