@@ -79,14 +79,22 @@
       </div>
 
       <form id="auth-form" class="auth-form">
-        <label for="auth-name">Nombre</label>
-        <input id="auth-name" type="text" placeholder="Solo para registro" />
+        <div id="auth-name-group" class="auth-field hidden">
+          <label class="auth-label" for="auth-name">Nombre</label>
+          <input id="auth-name" class="auth-input" type="text" placeholder="Tu nombre" autocomplete="name" />
+        </div>
 
-        <label for="auth-email">Correo</label>
-        <input id="auth-email" type="email" required />
+        <div class="auth-field">
+          <label class="auth-label" for="auth-email">Correo</label>
+          <input id="auth-email" class="auth-input" type="email" placeholder="ejemplo@correo.com" autocomplete="email" required />
+        </div>
 
-        <label for="auth-password">Contraseña</label>
-        <input id="auth-password" type="password" minlength="6" required />
+        <div class="auth-field">
+          <label class="auth-label" for="auth-password">Contraseña</label>
+          <input id="auth-password" class="auth-input" type="password" minlength="6" placeholder="Minimo 6 caracteres" autocomplete="current-password" required />
+        </div>
+
+        <p class="auth-helper">Usa tu correo para ingresar. Si eres nuevo, crea tu cuenta cliente.</p>
 
         <button id="auth-submit-btn" class="btn" type="submit">Entrar</button>
       </form>

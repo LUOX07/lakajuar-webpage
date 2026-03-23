@@ -252,17 +252,27 @@ body::before {
     z-index: 3000;
     display: grid;
     place-items: center;
-    background: rgba(15, 22, 48, 0.6);
+    background: rgba(24, 16, 7, 0.55);
+    backdrop-filter: blur(4px);
     padding: 16px;
+    animation: auth-overlay-in 0.2s ease;
 }
 
 .auth-modal-content {
-    width: min(460px, 95vw);
-    border-radius: 14px;
-    background: #fff;
-    padding: 16px;
+    width: min(500px, 95vw);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fffaf5 0%, #fff 100%);
+    border: 1px solid rgba(195, 141, 89, 0.35);
+    padding: 20px;
     position: relative;
-    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 24px 48px rgba(41, 29, 17, 0.3);
+    animation: auth-modal-in 0.24s ease;
+}
+
+.auth-modal-content h3 {
+    margin: 0 0 14px;
+    font-size: 1.9rem;
+    color: #5f3c20;
 }
 
 .auth-close-btn {
@@ -277,25 +287,77 @@ body::before {
 
 .auth-mode-buttons {
     display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.auth-mode-buttons .btn {
+    flex: 1;
+    font-size: 1.05rem;
 }
 
 .auth-form {
     display: grid;
-    gap: 8px;
+    gap: 12px;
 }
 
-.auth-form input {
+.auth-field {
+    display: grid;
+    gap: 6px;
+}
+
+.auth-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #6a4527;
+}
+
+.auth-input {
+    width: 100%;
     border: 1px solid #d7bca4;
-    border-radius: 8px;
-    padding: 9px 10px;
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 1rem;
+    background: #fffefc;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-input:focus {
+    border-color: #c38d59;
+    box-shadow: 0 0 0 3px rgba(211, 167, 120, 0.22);
+}
+
+.auth-helper {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #7a6a5e;
 }
 
 .auth-message {
     min-height: 20px;
     margin: 10px 0 0;
     font-size: 0.9rem;
+}
+
+@keyframes auth-modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes auth-overlay-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .shop-section h2 {

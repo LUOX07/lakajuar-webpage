@@ -99,6 +99,7 @@ const ui = {
   authCloseBtn: document.getElementById("auth-close-btn"),
   authTitle: document.getElementById("auth-title"),
   authForm: document.getElementById("auth-form"),
+  authNameGroup: document.getElementById("auth-name-group"),
   authName: document.getElementById("auth-name"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
@@ -370,7 +371,8 @@ function setAuthMode(registerMode) {
   ui.authTitle.textContent = registerMode ? "Crear cuenta cliente" : "Iniciar sesión";
   ui.authSubmitBtn.textContent = registerMode ? "Crear cuenta" : "Entrar";
   ui.authName.required = registerMode;
-  ui.authName.parentElement.style.display = registerMode ? "block" : "none";
+  ui.authNameGroup?.classList.toggle("hidden", !registerMode);
+  ui.authPassword.setAttribute("autocomplete", registerMode ? "new-password" : "current-password");
 
   ui.loginModeBtn.classList.toggle("secondary", registerMode);
   ui.registerModeBtn.classList.toggle("secondary", !registerMode);
