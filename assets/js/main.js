@@ -103,6 +103,7 @@ const ui = {
   authName: document.getElementById("auth-name"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
+  authTogglePassword: document.getElementById("auth-toggle-password"),
   authSubmitBtn: document.getElementById("auth-submit-btn"),
   authMessage: document.getElementById("auth-message"),
   loginModeBtn: document.getElementById("auth-mode-login"),
@@ -558,6 +559,14 @@ function bindUIEvents() {
 
   ui.loginModeBtn?.addEventListener("click", () => setAuthMode(false));
   ui.registerModeBtn?.addEventListener("click", () => setAuthMode(true));
+
+  ui.authTogglePassword?.addEventListener("click", () => {
+    const isHidden = ui.authPassword.type === "password";
+    ui.authPassword.type = isHidden ? "text" : "password";
+    ui.authTogglePassword.textContent = isHidden ? "🙈" : "👁";
+    ui.authTogglePassword.setAttribute("aria-label", isHidden ? "Ocultar contraseña" : "Mostrar contraseña");
+    ui.authTogglePassword.setAttribute("title", isHidden ? "Ocultar contraseña" : "Mostrar contraseña");
+  });
 
   ui.authForm?.addEventListener("submit", async event => {
     event.preventDefault();
