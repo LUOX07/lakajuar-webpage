@@ -365,6 +365,30 @@ function showAuthMessage(message, isError = false) {
   ui.authMessage.style.color = isError ? "#c0392b" : "#2e7d32";
 }
 
+function getFriendlyAuthError(errorCode, registerMode) {
+  switch (errorCode) {
+    case "auth/email-already-in-use":
+      return registerMode
+        ? "Ese correo ya fue registrado. Inicia sesion con esa cuenta o usa otro correo."
+        : "Ese correo ya existe, pero no pudimos iniciar sesion con los datos ingresados.";
+    case "auth/invalid-credential":
+    case "auth/invalid-login-credentials":
+      return "Correo o contrasena incorrectos. Verifica tus datos e intenta de nuevo.";
+    case "auth/invalid-email":
+      return "El correo ingresado no es valido.";
+    case "auth/weak-password":
+      return "La contrasena es muy debil. Usa al menos 6 caracteres.";
+    case "auth/too-many-requests":
+      return "Demasiados intentos. Espera un momento e intenta nuevamente.";
+    case "auth/network-request-failed":
+      return "No se pudo conectar con Firebase. Revisa tu internet e intenta otra vez.";
+    case "permission-denied":
+      return "Tu cuenta no tiene permisos para esta accion.";
+    default:
+      return `Error: ${errorCode || "No se pudo completar la accion."}`;
+  }
+}
+
 function setAuthMode(registerMode) {
   isRegisterMode = registerMode;
   if (!ui.authTitle || !ui.authSubmitBtn || !ui.authName || !ui.loginModeBtn || !ui.registerModeBtn) return;
@@ -591,7 +615,10 @@ function bindUIEvents() {
       }
       setTimeout(closeAuthModal, 600);
     } catch (error) {
-      showAuthMessage(`Error: ${error.message}`, true);
+      if (error?.code === "auth/email-already-in-use" && isRegisterMode) {
+        setAuthMode(false);
+      }
+      showAuthMessage(getFriendlyAuthError(error?.code, isRegisterMode), true);
     }
   });
 
