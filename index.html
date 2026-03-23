@@ -20,6 +20,9 @@
     </a>
     <div class="shop-controls">
       <input id="search-input" type="search" placeholder="Buscar productos..." />
+      <button id="auth-open-btn" class="auth-open-btn" type="button">Ingresar</button>
+      <button id="auth-logout-btn" class="auth-logout-btn hidden" type="button">Salir</button>
+      <span id="auth-role-badge" class="auth-role-badge hidden"></span>
       <div class="cart-status" role="status" aria-live="polite">
         <span class="cart-icon" aria-hidden="true">🛒</span>
         <span>Carrito</span>
@@ -31,14 +34,66 @@
   <main class="main-content">
     <section class="shop-section" aria-label="Productos">
       <h2>Productos</h2>
-      <div class="category-tabs" role="tablist" aria-label="Categorías">
-        <button class="tab-button active" data-cat="joyas" role="tab">JOYAS</button>
-        <button class="tab-button" data-cat="cases" role="tab">CASES</button>
-        <button class="tab-button" data-cat="accesorios" role="tab">ACCESORIOS</button>
-      </div>
+      <div id="category-tabs" class="category-tabs" role="tablist" aria-label="Categorías"></div>
       <div class="product-grid" id="product-grid"></div>
     </section>
+
+    <section id="admin-panel" class="admin-panel hidden" aria-label="Panel administrador">
+      <h2>Panel Admin</h2>
+      <p>Gestiona productos, precios, categorías e imágenes de tu tienda.</p>
+
+      <form id="product-form" class="admin-form">
+        <input id="product-id" type="hidden" />
+
+        <label for="product-name">Nombre del producto</label>
+        <input id="product-name" type="text" required />
+
+        <label for="product-price">Precio en guaraníes (Gs.)</label>
+        <input id="product-price" type="number" min="0" step="100" required />
+
+        <label for="product-category">Categoría</label>
+        <input id="product-category" type="text" placeholder="joyas, cases, accesorios o nueva categoría" required />
+
+        <label for="product-description">Descripción</label>
+        <textarea id="product-description" rows="3" required></textarea>
+
+        <label for="product-image">Foto del producto</label>
+        <input id="product-image" type="file" accept="image/*" />
+
+        <button id="save-product-btn" class="btn" type="submit">Guardar producto</button>
+        <button id="cancel-edit-btn" class="btn secondary" type="button">Cancelar edición</button>
+      </form>
+
+      <div id="admin-products" class="admin-products"></div>
+    </section>
   </main>
+
+  <div id="auth-modal" class="auth-modal hidden" aria-hidden="true">
+    <div class="auth-modal-content">
+      <button id="auth-close-btn" class="auth-close-btn" type="button" aria-label="Cerrar">✕</button>
+      <h3 id="auth-title">Acceso</h3>
+
+      <div class="auth-mode-buttons">
+        <button id="auth-mode-login" class="btn" type="button">Iniciar sesión</button>
+        <button id="auth-mode-register" class="btn secondary" type="button">Crear cuenta cliente</button>
+      </div>
+
+      <form id="auth-form" class="auth-form">
+        <label for="auth-name">Nombre</label>
+        <input id="auth-name" type="text" placeholder="Solo para registro" />
+
+        <label for="auth-email">Correo</label>
+        <input id="auth-email" type="email" required />
+
+        <label for="auth-password">Contraseña</label>
+        <input id="auth-password" type="password" minlength="6" required />
+
+        <button id="auth-submit-btn" class="btn" type="submit">Entrar</button>
+      </form>
+
+      <p id="auth-message" class="auth-message"></p>
+    </div>
+  </div>
 
   <button id="cart-toggle-btn" class="floating-cart-btn" aria-label="Abrir carrito" title="Ver carrito">
     🛒 <span id="floating-cart-count">0</span>
@@ -70,6 +125,6 @@
     <p>Visita nuestro sitio: <a href="https://LUOX07.github.io/lakajuar-webpage">https://LUOX07.github.io/lakajuar-webpage</a></p>
   </footer>
 
-  <script src="assets/js/main.js"></script>
+  <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>

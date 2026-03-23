@@ -1,25 +1,165 @@
-const products = [
-  { id: 1, category: 'joyas', name: 'Collar LAKAJUAR', price: 60000, img: 'https://via.placeholder.com/400x300?text=Collar+LAKAJUAR', desc: 'Collar delicado y elegante para uso diario.' },
-  { id: 2, category: 'joyas', name: 'Aros LAKAJUAR', price: 10000, img: 'https://via.placeholder.com/400x300?text=Aros+LAKAJUAR', desc: 'Aros finos y livianos para cualquier ocasión.' },
-  { id: 3, category: 'joyas', name: 'Set de aros mini', price: 10000, img: 'https://via.placeholder.com/400x300?text=Set+Aros+Mini', desc: 'Set de aros pequeños con diseño moderno.' },
-  { id: 4, category: 'cases', name: 'Case transparente', price: 18, img: 'https://via.placeholder.com/400x300?text=Case+transparente', desc: 'Protección slim sin perder diseño.' },
-  { id: 5, category: 'cases', name: 'Case con glitter', price: 20, img: 'https://via.placeholder.com/400x300?text=Case+glitter', desc: 'Brillo elegante para tu smartphone.' },
-  { id: 6, category: 'accesorios', name: 'Cargador rápido USB-C', price: 12, img: 'https://via.placeholder.com/400x300?text=Cargador+USB-C', desc: 'Carga segura y rápida.' },
-  { id: 7, category: 'accesorios', name: 'Soporte magnético', price: 18, img: 'https://via.placeholder.com/400x300?text=Soporte+magnetico', desc: 'Soporte para auto y escritorio.' }
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  serverTimestamp,
+  query,
+  orderBy,
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+import { firebaseConfig, ADMIN_EMAILS } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+const DEFAULT_PRODUCTS = [
+  {
+    category: "joyas",
+    name: "Collar LAKAJUAR",
+    price: 60000,
+    img: "https://via.placeholder.com/400x300?text=Collar+LAKAJUAR",
+    desc: "Collar delicado y elegante para uso diario.",
+    active: true,
+  },
+  {
+    category: "joyas",
+    name: "Aros LAKAJUAR",
+    price: 10000,
+    img: "https://via.placeholder.com/400x300?text=Aros+LAKAJUAR",
+    desc: "Aros finos y livianos para cualquier ocasión.",
+    active: true,
+  },
+  {
+    category: "joyas",
+    name: "Set de aros mini",
+    price: 10000,
+    img: "https://via.placeholder.com/400x300?text=Set+Aros+Mini",
+    desc: "Set de aros pequeños con diseño moderno.",
+    active: true,
+  },
+  {
+    category: "cases",
+    name: "Case transparente",
+    price: 18000,
+    img: "https://via.placeholder.com/400x300?text=Case+transparente",
+    desc: "Protección slim sin perder diseño.",
+    active: true,
+  },
+  {
+    category: "accesorios",
+    name: "Cargador rápido USB-C",
+    price: 25000,
+    img: "https://via.placeholder.com/400x300?text=Cargador+USB-C",
+    desc: "Carga segura y rápida.",
+    active: true,
+  },
 ];
 
-let cart = JSON.parse(localStorage.getItem('lakajuarCart') || '[]');
-let activeDiscount = JSON.parse(localStorage.getItem('lakajuarDiscount') || '0');
+const ui = {
+  searchInput: document.getElementById("search-input"),
+  productGrid: document.getElementById("product-grid"),
+  categoryTabs: document.getElementById("category-tabs"),
+  cartCount: document.getElementById("cart-count"),
+  floatingCartCount: document.getElementById("floating-cart-count"),
+  cartStatus: document.querySelector(".cart-status"),
+  cartDrawer: document.getElementById("cart-drawer"),
+  cartToggleBtn: document.getElementById("cart-toggle-btn"),
+  closeCartDrawerBtn: document.getElementById("close-cart-drawer"),
+  cartItems: document.getElementById("cart-items"),
+  cartSubtotal: document.getElementById("cart-subtotal"),
+  cartDiscount: document.getElementById("cart-discount"),
+  cartShipping: document.getElementById("cart-shipping"),
+  cartTotal: document.getElementById("cart-total"),
+  checkoutBtn: document.getElementById("checkout-btn"),
+  authOpenBtn: document.getElementById("auth-open-btn"),
+  authLogoutBtn: document.getElementById("auth-logout-btn"),
+  authRoleBadge: document.getElementById("auth-role-badge"),
+  authModal: document.getElementById("auth-modal"),
+  authCloseBtn: document.getElementById("auth-close-btn"),
+  authTitle: document.getElementById("auth-title"),
+  authForm: document.getElementById("auth-form"),
+  authName: document.getElementById("auth-name"),
+  authEmail: document.getElementById("auth-email"),
+  authPassword: document.getElementById("auth-password"),
+  authSubmitBtn: document.getElementById("auth-submit-btn"),
+  authMessage: document.getElementById("auth-message"),
+  loginModeBtn: document.getElementById("auth-mode-login"),
+  registerModeBtn: document.getElementById("auth-mode-register"),
+  adminPanel: document.getElementById("admin-panel"),
+  productForm: document.getElementById("product-form"),
+  productId: document.getElementById("product-id"),
+  productName: document.getElementById("product-name"),
+  productPrice: document.getElementById("product-price"),
+  productCategory: document.getElementById("product-category"),
+  productDescription: document.getElementById("product-description"),
+  productImage: document.getElementById("product-image"),
+  cancelEditBtn: document.getElementById("cancel-edit-btn"),
+  adminProducts: document.getElementById("admin-products"),
+};
+
+let products = [];
+let cart = JSON.parse(localStorage.getItem("lakajuarCart") || "[]");
+let activeDiscount = Number(JSON.parse(localStorage.getItem("lakajuarDiscount") || "0"));
+let currentCategory = "joyas";
+let isRegisterMode = false;
+let currentUserProfile = null;
 
 function formatMoney(value) {
-  return `Gs. ${Math.round(value).toLocaleString('es-PY')}`;
+  return `Gs. ${Math.round(value).toLocaleString("es-PY")}`;
+}
+
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+function preferredCategoryOrder(categories) {
+  const preferred = ["joyas", "cases", "accesorios"];
+  const existing = [...new Set(categories.map(c => c.toLowerCase()))];
+  const sorted = preferred.filter(c => existing.includes(c));
+  const extras = existing.filter(c => !preferred.includes(c)).sort();
+  return [...sorted, ...extras];
+}
+
+function ensureCartIntegrity() {
+  const validIds = new Set(products.map(p => p.id));
+  cart = cart.filter(item => validIds.has(item.id) && item.quantity > 0);
 }
 
 function getCartItems() {
-  return cart.map(({ id, quantity }) => {
-    const product = products.find(p => p.id === id);
-    return product ? { ...product, quantity } : null;
-  }).filter(Boolean);
+  return cart
+    .map(({ id, quantity }) => {
+      const product = products.find(p => p.id === id);
+      return product ? { ...product, quantity } : null;
+    })
+    .filter(Boolean);
 }
 
 function getCartCount() {
@@ -50,22 +190,18 @@ function calculateCartTotal() {
 
 function updateCartSummary() {
   const count = getCartCount();
-  const cartCountNode = document.getElementById('cart-count');
-  const floatCountNode = document.getElementById('floating-cart-count');
+  if (ui.cartCount) ui.cartCount.textContent = count;
+  if (ui.floatingCartCount) ui.floatingCartCount.textContent = count;
 
-  if (cartCountNode) cartCountNode.textContent = count;
-  if (floatCountNode) floatCountNode.textContent = count;
-
-  const cartStatus = document.querySelector('.cart-status');
-  if (cartStatus) {
-    cartStatus.classList.add('cart-bounce');
-    setTimeout(() => cartStatus.classList.remove('cart-bounce'), 400);
+  if (ui.cartStatus) {
+    ui.cartStatus.classList.add("cart-bounce");
+    setTimeout(() => ui.cartStatus.classList.remove("cart-bounce"), 380);
   }
 }
 
 function saveCart() {
-  localStorage.setItem('lakajuarCart', JSON.stringify(cart));
-  localStorage.setItem('lakajuarDiscount', JSON.stringify(activeDiscount));
+  localStorage.setItem("lakajuarCart", JSON.stringify(cart));
+  localStorage.setItem("lakajuarDiscount", JSON.stringify(activeDiscount));
   updateCartSummary();
   renderCartDrawer();
 }
@@ -96,106 +232,110 @@ function changeItemQuantity(productId, delta) {
   saveCart();
 }
 
-function applyCoupon() {
-  const input = document.getElementById('coupon-code');
-  const message = document.getElementById('coupon-message');
-  if (!input || !message) return;
+function renderProducts(productList) {
+  if (!ui.productGrid) return;
 
-  const code = input.value.trim().toUpperCase();
-  if (!code) {
-    message.textContent = 'Ingresa un código de cupón.';
-    message.style.color = '#e67e22';
+  if (productList.length === 0) {
+    ui.productGrid.innerHTML = "<p>No hay productos en esta categoría por ahora.</p>";
     return;
   }
 
-  if (code === 'LAKA10') {
-    activeDiscount = 0.1;
-    message.textContent = '¡Cupón aplicado! 10% de descuento.';
-    message.style.color = '#27ae60';
-  } else if (code === 'ENVIOFREE') {
-    activeDiscount = 0.05;
-    message.textContent = '¡Cupón aplicado! 5% de descuento + envío estándar.';
-    message.style.color = '#27ae60';
-  } else {
-    activeDiscount = 0;
-    message.textContent = 'Cupón inválido, intenta LAKA10 o ENVIOFREE.';
-    message.style.color = '#c0392b';
+  ui.productGrid.innerHTML = productList
+    .map(
+      p => `
+    <article class="product-card">
+      <img src="${p.img}" alt="${p.name}" />
+      <h3>${p.name}</h3>
+      <p>${p.desc}</p>
+      <div class="price">${formatMoney(p.price)}</div>
+      <button class="btn" data-add-cart="${p.id}">Agregar al carrito</button>
+    </article>
+  `,
+    )
+    .join("");
+
+  ui.productGrid.querySelectorAll("[data-add-cart]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-add-cart");
+      addToCart(id);
+    });
+  });
+}
+
+function renderCategoryTabs() {
+  if (!ui.categoryTabs) return;
+  const categories = preferredCategoryOrder(products.map(p => p.category));
+  if (categories.length === 0) {
+    ui.categoryTabs.innerHTML = "";
+    return;
   }
 
-  saveCart();
+  if (!categories.includes(currentCategory)) {
+    currentCategory = categories[0];
+  }
+
+  ui.categoryTabs.innerHTML = categories
+    .map(
+      cat => `
+      <button class="tab-button ${cat === currentCategory ? "active" : ""}" data-cat="${cat}" role="tab">
+        ${cat.toUpperCase()}
+      </button>
+    `,
+    )
+    .join("");
+
+  ui.categoryTabs.querySelectorAll(".tab-button").forEach(tab => {
+    tab.addEventListener("click", () => {
+      currentCategory = tab.getAttribute("data-cat") || "joyas";
+      renderCategoryTabs();
+      applyFilters();
+    });
+  });
+}
+
+function applyFilters() {
+  const queryText = (ui.searchInput?.value || "").trim().toLowerCase();
+  const filtered = products.filter(p => {
+    const matchCategory = p.category === currentCategory;
+    const matchQuery = !queryText || p.name.toLowerCase().includes(queryText) || p.desc.toLowerCase().includes(queryText);
+    return matchCategory && matchQuery;
+  });
+  renderProducts(filtered);
 }
 
 function renderCartDrawer() {
-  const itemsContainer = document.getElementById('cart-items');
-  const subtotalNode = document.getElementById('cart-subtotal');
-  const discountNode = document.getElementById('cart-discount');
-  const shippingNode = document.getElementById('cart-shipping');
-  const totalNode = document.getElementById('cart-total');
-
-  if (!itemsContainer || !subtotalNode || !discountNode || !shippingNode || !totalNode) return;
+  if (!ui.cartItems || !ui.cartSubtotal || !ui.cartDiscount || !ui.cartShipping || !ui.cartTotal) return;
 
   const cartItems = getCartItems();
 
   if (cartItems.length === 0) {
-    itemsContainer.innerHTML = '<p>Tu carrito está vacío. Agrega productos para comenzar.</p>';
+    ui.cartItems.innerHTML = "<p>Tu carrito está vacío. Agrega productos para comenzar.</p>";
   } else {
-    itemsContainer.innerHTML = cartItems.map(item => `
+    ui.cartItems.innerHTML = cartItems
+      .map(
+        item => `
       <div class="cart-item">
         <div class="item-details">
           <div class="item-name">${item.name}</div>
           <div class="item-price">${formatMoney(item.price)} c/u</div>
         </div>
         <div class="item-controls">
-          <button class="qty-btn" data-action="decrease" data-id="${item.id}">–</button>
+          <button class="qty-btn" data-action="decrease" data-id="${item.id}">-</button>
           <span>${item.quantity}</span>
           <button class="qty-btn" data-action="increase" data-id="${item.id}">+</button>
           <button class="remove-item" data-id="${item.id}" aria-label="Quitar ${item.name}">x</button>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
   }
 
   const totals = calculateCartTotal();
-  subtotalNode.textContent = formatMoney(totals.subtotal);
-  discountNode.textContent = formatMoney(totals.discountAmount);
-  shippingNode.textContent = formatMoney(totals.shipping);
-  totalNode.textContent = formatMoney(totals.total);
-}
-
-function setupCartDrawerEvents() {
-  const itemsContainer = document.getElementById('cart-items');
-  const applyCouponBtn = document.getElementById('coupon-apply-btn');
-
-  if (itemsContainer) {
-    itemsContainer.addEventListener('click', (event) => {
-      const target = event.target;
-      if (target.matches('.qty-btn')) {
-        const id = Number(target.getAttribute('data-id'));
-        const action = target.getAttribute('data-action');
-        if (action === 'increase') changeItemQuantity(id, 1);
-        if (action === 'decrease') changeItemQuantity(id, -1);
-      }
-      if (target.matches('.remove-item')) {
-        const id = Number(target.getAttribute('data-id'));
-        removeItemFromCart(id);
-      }
-    });
-  }
-
-  if (applyCouponBtn) applyCouponBtn.addEventListener('click', applyCoupon);
-}
-
-function renderProducts(productList) {
-  const grid = document.getElementById('product-grid');
-  grid.innerHTML = productList.map(p => `
-    <article class="product-card">
-      <img src="${p.img}" alt="${p.name}" />
-      <h3>${p.name}</h3>
-      <p>${p.desc}</p>
-      <div class="price">${formatMoney(p.price)}</div>
-      <button class="btn" onclick="addToCart(${p.id})">Agregar al carrito</button>
-    </article>
-  `).join('');
+  ui.cartSubtotal.textContent = formatMoney(totals.subtotal);
+  ui.cartDiscount.textContent = formatMoney(totals.discountAmount);
+  ui.cartShipping.textContent = formatMoney(totals.shipping);
+  ui.cartTotal.textContent = formatMoney(totals.total);
 }
 
 function addToCart(productId) {
@@ -205,69 +345,365 @@ function addToCart(productId) {
   alert(`${product.name} agregado al carrito.`);
 }
 
-function filterProducts(category, query) {
-  const q = query.trim().toLowerCase();
-  const filtered = products.filter(p => {
-    const matchCat = category === 'all' || p.category === category;
-    const matchQuery = !q || p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
-    return matchCat && matchQuery;
-  });
-  renderProducts(filtered);
-}
-
-const tabs = document.querySelectorAll('.tab-button');
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    filterProducts(tab.getAttribute('data-cat'), document.getElementById('search-input').value);
-  });
-});
-
-const searchInput = document.getElementById('search-input');
-searchInput.addEventListener('input', () => {
-  const activeTab = document.querySelector('.tab-button.active');
-  const active = activeTab ? activeTab.getAttribute('data-cat') : 'joyas';
-  filterProducts(active, searchInput.value);
-});
-
-filterProducts('joyas', '');
-saveCart();
-setupCartDrawerEvents();
-
-const cartDrawer = document.getElementById('cart-drawer');
-const cartToggleBtn = document.getElementById('cart-toggle-btn');
-const closeCartDrawerBtn = document.getElementById('close-cart-drawer');
-const checkoutBtn = document.getElementById('checkout-btn');
-
 function openCartDrawer() {
-  if (cartDrawer) cartDrawer.classList.add('open');
+  if (ui.cartDrawer) ui.cartDrawer.classList.add("open");
 }
 
 function closeCartDrawer() {
-  if (cartDrawer) cartDrawer.classList.remove('open');
+  if (ui.cartDrawer) ui.cartDrawer.classList.remove("open");
 }
 
-if (cartToggleBtn) cartToggleBtn.addEventListener('click', openCartDrawer);
-if (closeCartDrawerBtn) closeCartDrawerBtn.addEventListener('click', closeCartDrawer);
-if (checkoutBtn) {
-  checkoutBtn.addEventListener('click', () => {
+function isAdminEmail(email) {
+  return ADMIN_EMAILS.map(item => item.toLowerCase()).includes(email.toLowerCase());
+}
+
+function showAuthMessage(message, isError = false) {
+  if (!ui.authMessage) return;
+  ui.authMessage.textContent = message;
+  ui.authMessage.style.color = isError ? "#c0392b" : "#2e7d32";
+}
+
+function setAuthMode(registerMode) {
+  isRegisterMode = registerMode;
+  if (!ui.authTitle || !ui.authSubmitBtn || !ui.authName || !ui.loginModeBtn || !ui.registerModeBtn) return;
+
+  ui.authTitle.textContent = registerMode ? "Crear cuenta cliente" : "Iniciar sesión";
+  ui.authSubmitBtn.textContent = registerMode ? "Crear cuenta" : "Entrar";
+  ui.authName.required = registerMode;
+  ui.authName.parentElement.style.display = registerMode ? "block" : "none";
+
+  ui.loginModeBtn.classList.toggle("secondary", registerMode);
+  ui.registerModeBtn.classList.toggle("secondary", !registerMode);
+}
+
+function openAuthModal() {
+  if (!ui.authModal) return;
+  ui.authModal.classList.remove("hidden");
+  ui.authModal.setAttribute("aria-hidden", "false");
+  showAuthMessage("");
+}
+
+function closeAuthModal() {
+  if (!ui.authModal) return;
+  ui.authModal.classList.add("hidden");
+  ui.authModal.setAttribute("aria-hidden", "true");
+  ui.authForm.reset();
+  showAuthMessage("");
+}
+
+async function upsertUserProfile(user, displayName = "") {
+  const userRef = doc(db, "users", user.uid);
+  const existing = await getDoc(userRef);
+  const role = isAdminEmail(user.email || "") ? "admin" : "cliente";
+
+  if (!existing.exists()) {
+    await setDoc(userRef, {
+      uid: user.uid,
+      name: displayName || user.email,
+      email: user.email,
+      role,
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  const latest = await getDoc(userRef);
+  currentUserProfile = latest.exists() ? latest.data() : { role: "cliente", email: user.email };
+}
+
+function updateAuthUI() {
+  const user = auth.currentUser;
+  const isLogged = !!user;
+  const role = currentUserProfile?.role || "cliente";
+
+  ui.authOpenBtn?.classList.toggle("hidden", isLogged);
+  ui.authLogoutBtn?.classList.toggle("hidden", !isLogged);
+
+  if (ui.authRoleBadge) {
+    if (isLogged) {
+      ui.authRoleBadge.textContent = role === "admin" ? "Administrador" : "Cliente";
+      ui.authRoleBadge.classList.remove("hidden");
+    } else {
+      ui.authRoleBadge.classList.add("hidden");
+      ui.authRoleBadge.textContent = "";
+    }
+  }
+
+  if (ui.adminPanel) {
+    ui.adminPanel.classList.toggle("hidden", role !== "admin");
+  }
+}
+
+async function uploadProductImageIfNeeded(file) {
+  if (!file) return "";
+  const fileName = `${Date.now()}-${slugify(file.name)}`;
+  const storageRef = ref(storage, `products/${fileName}`);
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+}
+
+function resetProductForm() {
+  ui.productForm?.reset();
+  if (ui.productId) ui.productId.value = "";
+}
+
+function normalizeProduct(raw, fallbackId) {
+  return {
+    id: String(raw.id || fallbackId),
+    name: raw.name || "Producto",
+    price: Number(raw.price || 0),
+    category: (raw.category || "accesorios").toLowerCase().trim(),
+    desc: raw.desc || "",
+    img: raw.img || "https://via.placeholder.com/400x300?text=Producto",
+    active: raw.active !== false,
+  };
+}
+
+function renderAdminProducts() {
+  if (!ui.adminProducts) return;
+
+  const productRows = products
+    .map(
+      p => `
+      <div class="admin-product-row">
+        <img src="${p.img}" alt="${p.name}" />
+        <div>
+          <strong>${p.name}</strong>
+          <div>${formatMoney(p.price)} - ${p.category.toUpperCase()}</div>
+        </div>
+        <div class="admin-product-actions">
+          <button class="btn" data-edit-id="${p.id}">Editar</button>
+          <button class="btn secondary" data-delete-id="${p.id}">Eliminar</button>
+        </div>
+      </div>
+    `,
+    )
+    .join("");
+
+  ui.adminProducts.innerHTML = productRows || "<p>No hay productos cargados.</p>";
+
+  ui.adminProducts.querySelectorAll("[data-edit-id]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const product = products.find(item => item.id === btn.getAttribute("data-edit-id"));
+      if (!product) return;
+
+      ui.productId.value = product.id;
+      ui.productName.value = product.name;
+      ui.productPrice.value = product.price;
+      ui.productCategory.value = product.category;
+      ui.productDescription.value = product.desc;
+      window.scrollTo({ top: ui.adminPanel.offsetTop - 20, behavior: "smooth" });
+    });
+  });
+
+  ui.adminProducts.querySelectorAll("[data-delete-id]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.getAttribute("data-delete-id");
+      if (!id) return;
+      if (!confirm("¿Eliminar este producto?")) return;
+      await deleteDoc(doc(db, "products", id));
+    });
+  });
+}
+
+function bindUIEvents() {
+  ui.searchInput?.addEventListener("input", applyFilters);
+
+  ui.cartToggleBtn?.addEventListener("click", openCartDrawer);
+  ui.closeCartDrawerBtn?.addEventListener("click", closeCartDrawer);
+
+  ui.cartItems?.addEventListener("click", event => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    if (target.matches(".qty-btn")) {
+      const id = target.getAttribute("data-id");
+      const action = target.getAttribute("data-action");
+      if (!id) return;
+      changeItemQuantity(id, action === "increase" ? 1 : -1);
+    }
+
+    if (target.matches(".remove-item")) {
+      const id = target.getAttribute("data-id");
+      if (!id) return;
+      removeItemFromCart(id);
+    }
+  });
+
+  ui.checkoutBtn?.addEventListener("click", () => {
     const totals = calculateCartTotal();
     if (totals.total <= 0) {
-      alert('Tu carrito está vacío. Agrega productos antes de pagar.');
+      alert("Tu carrito está vacío. Agrega productos antes de pagar.");
       return;
     }
-    alert(`Total a pagar ${formatMoney(totals.total)} (subtotal ${formatMoney(totals.subtotal)}, envío ${formatMoney(totals.shipping)}, descuento ${formatMoney(totals.discountAmount)}). Gracias por comprar en LAKAJUAR.`);
+
+    alert(
+      `Total a pagar ${formatMoney(totals.total)} (subtotal ${formatMoney(totals.subtotal)}, envío ${formatMoney(
+        totals.shipping,
+      )}, descuento ${formatMoney(totals.discountAmount)}). Gracias por comprar en LAKAJUAR.`,
+    );
+
     cart = [];
     activeDiscount = 0;
     saveCart();
     closeCartDrawer();
   });
-}
 
-if (cartDrawer) {
-  cartDrawer.addEventListener('click', (event) => {
-    if (event.target === cartDrawer) closeCartDrawer();
+  ui.authOpenBtn?.addEventListener("click", openAuthModal);
+  ui.authCloseBtn?.addEventListener("click", closeAuthModal);
+  ui.authLogoutBtn?.addEventListener("click", async () => {
+    await signOut(auth);
   });
+
+  ui.loginModeBtn?.addEventListener("click", () => setAuthMode(false));
+  ui.registerModeBtn?.addEventListener("click", () => setAuthMode(true));
+
+  ui.authForm?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const email = ui.authEmail?.value?.trim();
+    const password = ui.authPassword?.value;
+    const name = ui.authName?.value?.trim();
+
+    if (!email || !password) {
+      showAuthMessage("Completa correo y contraseña.", true);
+      return;
+    }
+
+    try {
+      if (isRegisterMode) {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await upsertUserProfile(cred.user, name || "Cliente");
+        showAuthMessage("Cuenta cliente creada correctamente.");
+      } else {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await upsertUserProfile(cred.user);
+        showAuthMessage("Ingreso correcto.");
+      }
+      setTimeout(closeAuthModal, 600);
+    } catch (error) {
+      showAuthMessage(`Error: ${error.message}`, true);
+    }
+  });
+
+  ui.productForm?.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (currentUserProfile?.role !== "admin") return;
+
+    const id = ui.productId.value;
+    const name = ui.productName.value.trim();
+    const price = Number(ui.productPrice.value);
+    const category = ui.productCategory.value.trim().toLowerCase();
+    const desc = ui.productDescription.value.trim();
+    const file = ui.productImage.files?.[0];
+
+    if (!name || !category || !desc || Number.isNaN(price)) {
+      alert("Completa todos los campos obligatorios del producto.");
+      return;
+    }
+
+    try {
+      let imageUrl = "";
+      if (file) {
+        imageUrl = await uploadProductImageIfNeeded(file);
+      }
+
+      if (id) {
+        const productRef = doc(db, "products", id);
+        const current = products.find(item => item.id === id);
+        await updateDoc(productRef, {
+          name,
+          price,
+          category,
+          desc,
+          img: imageUrl || current?.img || "https://via.placeholder.com/400x300?text=Producto",
+          active: true,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await addDoc(collection(db, "products"), {
+          name,
+          price,
+          category,
+          desc,
+          img: imageUrl || "https://via.placeholder.com/400x300?text=Producto",
+          active: true,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      resetProductForm();
+    } catch (error) {
+      alert(`No se pudo guardar el producto: ${error.message}`);
+    }
+  });
+
+  ui.cancelEditBtn?.addEventListener("click", resetProductForm);
 }
 
+function seedLocalFallbackProducts() {
+  products = DEFAULT_PRODUCTS.map((item, index) => normalizeProduct(item, `seed-${index + 1}`));
+  ensureCartIntegrity();
+  renderCategoryTabs();
+  applyFilters();
+  renderAdminProducts();
+  saveCart();
+}
+
+function subscribeProducts() {
+  const productsQuery = query(collection(db, "products"), orderBy("createdAt", "desc"));
+
+  onSnapshot(
+    productsQuery,
+    snapshot => {
+      if (snapshot.empty) {
+        seedLocalFallbackProducts();
+        return;
+      }
+
+      products = snapshot.docs.map(docSnap => normalizeProduct({ id: docSnap.id, ...docSnap.data() }, docSnap.id));
+      ensureCartIntegrity();
+      renderCategoryTabs();
+      applyFilters();
+      renderAdminProducts();
+      saveCart();
+    },
+    () => {
+      seedLocalFallbackProducts();
+    },
+  );
+}
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    try {
+      await upsertUserProfile(user);
+    } catch {
+      currentUserProfile = { email: user.email, role: isAdminEmail(user.email || "") ? "admin" : "cliente" };
+    }
+  } else {
+    currentUserProfile = null;
+  }
+
+  updateAuthUI();
+  renderAdminProducts();
+});
+
+function validateFirebaseConfig() {
+  const values = Object.values(firebaseConfig || {});
+  return values.every(value => value && !String(value).startsWith("REEMPLAZA_"));
+}
+
+function bootstrap() {
+  bindUIEvents();
+  setAuthMode(false);
+
+  if (!validateFirebaseConfig()) {
+    seedLocalFallbackProducts();
+    showAuthMessage("Completa tu configuración Firebase en assets/js/firebase-config.js", true);
+    return;
+  }
+
+  subscribeProducts();
+}
+
+bootstrap();
