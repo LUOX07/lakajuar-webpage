@@ -95,6 +95,7 @@ const ui = {
   authOpenBtn: document.getElementById("auth-open-btn"),
   authLogoutBtn: document.getElementById("auth-logout-btn"),
   authRoleBadge: document.getElementById("auth-role-badge"),
+  toastContainer: document.getElementById("toast-container"),
   authModal: document.getElementById("auth-modal"),
   authCloseBtn: document.getElementById("auth-close-btn"),
   authTitle: document.getElementById("auth-title"),
@@ -126,6 +127,7 @@ let activeDiscount = Number(JSON.parse(localStorage.getItem("lakajuarDiscount") 
 let currentCategory = "joyas";
 let isRegisterMode = false;
 let currentUserProfile = null;
+let toastTimer = null;
 
 function formatMoney(value) {
   return `Gs. ${Math.round(value).toLocaleString("es-PY")}`;
@@ -363,6 +365,21 @@ function showAuthMessage(message, isError = false) {
   if (!ui.authMessage) return;
   ui.authMessage.textContent = message;
   ui.authMessage.style.color = isError ? "#c0392b" : "#2e7d32";
+}
+
+function showToast(message, type = "success") {
+  if (!ui.toastContainer) return;
+
+  ui.toastContainer.innerHTML = "";
+  const toast = document.createElement("div");
+  toast.className = `app-toast ${type}`;
+  toast.textContent = message;
+  ui.toastContainer.appendChild(toast);
+
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.remove();
+  }, 3000);
 }
 
 function getFriendlyAuthError(errorCode, registerMode) {
@@ -608,10 +625,12 @@ function bindUIEvents() {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await upsertUserProfile(cred.user, name || "Cliente");
         showAuthMessage("Cuenta cliente creada correctamente.");
+        showToast("Cuenta creada correctamente. Bienvenido a LAKAJUAR.", "success");
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         await upsertUserProfile(cred.user);
         showAuthMessage("Ingreso correcto.");
+        showToast("Ingreso correcto. Bienvenido nuevamente.", "success");
       }
       setTimeout(closeAuthModal, 600);
     } catch (error) {

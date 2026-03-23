@@ -149,6 +149,37 @@ body::before {
     font-weight: 700;
 }
 
+.toast-container {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 5000;
+    display: grid;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.app-toast {
+    min-width: 240px;
+    max-width: min(92vw, 380px);
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    padding: 12px 14px;
+    box-shadow: 0 14px 30px rgba(28, 19, 9, 0.35);
+    background: linear-gradient(130deg, #7e4f25, #d8aa56);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    animation: toast-in 0.24s ease, toast-out 0.3s ease 2.7s forwards;
+}
+
+.app-toast.success {
+    background: linear-gradient(130deg, #5a7d24, #7db93e);
+}
+
+.app-toast.error {
+    background: linear-gradient(130deg, #8b2d2d, #cd4c4c);
+}
+
 .cart-status {
     display: inline-flex;
     align-items: center;
@@ -401,6 +432,28 @@ body::before {
     }
     to {
         opacity: 1;
+    }
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toast-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px);
     }
 }
 
