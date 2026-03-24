@@ -28,6 +28,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 const FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'400'%20height%3D'300'%20viewBox%3D'0%200%20400%20300'%3E%3Crect%20width%3D'400'%20height%3D'300'%20fill%3D'%23f5ede3'%2F%3E%3Ctext%20x%3D'200'%20y%3D'160'%20font-family%3D'sans-serif'%20font-size%3D'18'%20fill%3D'%23b08060'%20text-anchor%3D'middle'%3ESin%20imagen%3C%2Ftext%3E%3C%2Fsvg%3E";
+const STORE_WHATSAPP_FALLBACK = "595984475612";
+const IS_LOCAL_DEV = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
 let runtimeConfig = null;
 let app = null;
@@ -168,7 +170,7 @@ function sanitizeImageUrl(url) {
 }
 
 function getStoreWhatsAppNumber() {
-  return runtimeConfig?.storeWhatsAppNumber || "";
+  return runtimeConfig?.storeWhatsAppNumber || STORE_WHATSAPP_FALLBACK;
 }
 
 function validateRuntimeConfig(config) {
@@ -967,7 +969,17 @@ function bindUIEvents() {
 }
 
 function seedLocalFallbackProducts() {
+  if (!IS_LOCAL_DEV) return;
   products = DEFAULT_PRODUCTS.map((item, index) => normalizeProduct(item, `seed-${index + 1}`));
+  ensureCartIntegrity();
+  renderCategoryTabs();
+  applyFilters();
+  renderAdminProducts();
+  saveCart();
+}
+
+function resetUiWithoutSeedProducts() {
+  products = [];
   ensureCartIntegrity();
   renderCategoryTabs();
   applyFilters();
@@ -998,8 +1010,14 @@ function subscribeProducts() {
       renderAdminProducts();
       saveCart();
     },
-    () => {
-      seedLocalFallbackProducts();
+    error => {
+      if (IS_LOCAL_DEV) {
+        seedLocalFallbackProducts();
+        return;
+      }
+
+      resetUiWithoutSeedProducts();
+      showToast(`No se pudieron cargar productos desde Firebase (${error?.code || "error"}).`, "error");
     },
   );
 }
@@ -1033,9 +1051,16 @@ async function bootstrap() {
     attachAuthObserver();
     subscribeProducts();
   } catch {
-    seedLocalFallbackProducts();
-    showAuthMessage("No se pudo cargar la configuracion segura del sitio.", true);
-    showToast("El sitio cargo en modo limitado por una configuracion faltante.", "error");
+    if (IS_LOCAL_DEV) {
+      seedLocalFallbackProducts();
+      showAuthMessage("No se pudo cargar la configuracion segura del sitio.", true);
+      showToast("Modo local: se cargaron productos de prueba.", "error");
+      return;
+    }
+
+    resetUiWithoutSeedProducts();
+    showAuthMessage("Falta configurar variables seguras en Cloudflare Pages.", true);
+    showToast("Configuracion remota pendiente: la tienda no se conecto a Firebase.", "error");
   }
 }
 
