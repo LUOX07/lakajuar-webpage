@@ -591,6 +591,14 @@ function renderAdminProducts() {
   });
 }
 
+function normalizeImageUrl(url) {
+  if (!url) return "";
+  // Convierte https://imgur.com/XXXXX  →  https://i.imgur.com/XXXXX.jpg
+  const imgurPage = url.match(/^https?:\/\/(?:www\.)?imgur\.com\/([a-zA-Z0-9]+)$/);
+  if (imgurPage) return `https://i.imgur.com/${imgurPage[1]}.jpg`;
+  return url;
+}
+
 function bindUIEvents() {
   ui.searchInput?.addEventListener("input", applyFilters);
 
@@ -695,7 +703,7 @@ function bindUIEvents() {
     const price = Number(ui.productPrice.value);
     const category = ui.productCategory.value.trim().toLowerCase();
     const desc = ui.productDescription.value.trim();
-    const imageUrl = (ui.productImage.value || "").trim();
+    const imageUrl = normalizeImageUrl((ui.productImage.value || "").trim());
 
     if (!name || !category || !desc || Number.isNaN(price)) {
       alert("Completa todos los campos obligatorios del producto.");
