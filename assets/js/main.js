@@ -139,7 +139,7 @@ function normalizeWhatsAppNumber(rawNumber) {
 
 function buildWhatsAppCheckoutMessage(items, totals) {
   const lines = [
-    "Hola LAKAJUAR, quiero coordinar este pedido:",
+    "Bienvenido a la Tienda Lakajuar, pronto seras atendido, te atenderemos en breve. Gracias por tu compra 🙏✨😊",
     "",
     "Productos:",
     ...items.map(item => `- ${item.quantity} x ${item.name} (${formatMoney(item.price)} c/u) = ${formatMoney(item.price * item.quantity)}`),
