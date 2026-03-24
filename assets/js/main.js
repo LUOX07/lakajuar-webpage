@@ -92,6 +92,7 @@ const ui = {
   cartShipping: document.getElementById("cart-shipping"),
   cartTotal: document.getElementById("cart-total"),
   checkoutBtn: document.getElementById("checkout-btn"),
+  whatsappContactLink: document.getElementById("whatsapp-contact-link"),
   authOpenBtn: document.getElementById("auth-open-btn"),
   authLogoutBtn: document.getElementById("auth-logout-btn"),
   authRoleBadge: document.getElementById("auth-role-badge"),
@@ -137,9 +138,13 @@ function normalizeWhatsAppNumber(rawNumber) {
   return String(rawNumber || "").replace(/\D/g, "");
 }
 
+function buildWhatsAppWelcomeMessage() {
+  return "Bienvenido a la Tienda Lakajuar, pronto seras atendido, te atenderemos en breve. Gracias por tu compra 🙏✨😊";
+}
+
 function buildWhatsAppCheckoutMessage(items, totals) {
   const lines = [
-    "Bienvenido a la Tienda Lakajuar, pronto seras atendido, te atenderemos en breve. Gracias por tu compra 🙏✨😊",
+    buildWhatsAppWelcomeMessage(),
     "",
     "Productos:",
     ...items.map(item => `- ${item.quantity} x ${item.name} (${formatMoney(item.price)} c/u) = ${formatMoney(item.price * item.quantity)}`),
@@ -153,6 +158,12 @@ function buildWhatsAppCheckoutMessage(items, totals) {
   ];
 
   return lines.join("\n");
+}
+
+function buildWhatsAppUrl(message) {
+  const whatsappNumber = normalizeWhatsAppNumber(STORE_WHATSAPP_NUMBER);
+  if (!whatsappNumber) return "";
+  return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 }
 
 function slugify(text) {
@@ -653,14 +664,13 @@ function bindUIEvents() {
       return;
     }
 
-    const whatsappNumber = normalizeWhatsAppNumber(STORE_WHATSAPP_NUMBER);
-    if (!whatsappNumber) {
+    const message = buildWhatsAppCheckoutMessage(items, totals);
+    const whatsappUrl = buildWhatsAppUrl(message);
+    if (!whatsappUrl) {
       alert("Configura el numero de WhatsApp de la tienda en assets/js/firebase-config.js");
       return;
     }
 
-    const message = buildWhatsAppCheckoutMessage(items, totals);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
     showToast("Te redirigimos a WhatsApp para coordinar tu compra.", "success");
 
@@ -773,6 +783,17 @@ function bindUIEvents() {
   });
 
   ui.cancelEditBtn?.addEventListener("click", resetProductForm);
+
+  ui.whatsappContactLink?.addEventListener("click", event => {
+    const whatsappUrl = buildWhatsAppUrl(buildWhatsAppWelcomeMessage());
+    if (!whatsappUrl) {
+      event.preventDefault();
+      alert("Configura el numero de WhatsApp de la tienda en assets/js/firebase-config.js");
+      return;
+    }
+
+    ui.whatsappContactLink.href = whatsappUrl;
+  });
 }
 
 function seedLocalFallbackProducts() {
