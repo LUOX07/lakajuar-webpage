@@ -69,7 +69,11 @@
             <input id="product-price" type="number" min="0" step="100" required />
 
             <label for="product-category">Categoría</label>
-            <input id="product-category" type="text" placeholder="joyas, cases, accesorios o nueva categoría" required />
+            <select id="product-category" required>
+              <option value="joyas">Joyas</option>
+              <option value="cases">Cases</option>
+              <option value="accesorios">Accesorios</option>
+            </select>
 
             <label for="product-description">Descripción</label>
             <textarea id="product-description" rows="3" required></textarea>

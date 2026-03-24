@@ -202,6 +202,26 @@ function preferredCategoryOrder(categories) {
   return [...sorted, ...extras];
 }
 
+function syncAdminCategorySelect(selectedValue = "") {
+  if (!ui.productCategory) return;
+
+  const baseCategories = ["joyas", "cases", "accesorios"];
+  const dynamicCategories = preferredCategoryOrder(products.map(p => p.category));
+  const allCategories = dynamicCategories.length ? dynamicCategories : baseCategories;
+  const normalizedSelected = String(selectedValue || "").toLowerCase().trim();
+
+  if (normalizedSelected && !allCategories.includes(normalizedSelected)) {
+    allCategories.push(normalizedSelected);
+  }
+
+  ui.productCategory.innerHTML = allCategories
+    .map(category => `<option value="${category}">${category.toUpperCase()}</option>`)
+    .join("");
+
+  const nextValue = normalizedSelected || ui.productCategory.value || allCategories[0];
+  ui.productCategory.value = allCategories.includes(nextValue) ? nextValue : allCategories[0];
+}
+
 function ensureCartIntegrity() {
   const validIds = new Set(products.map(p => p.id));
   cart = cart.filter(item => validIds.has(item.id) && item.quantity > 0);
@@ -329,6 +349,7 @@ function renderProducts(productList) {
 function renderCategoryTabs() {
   if (!ui.categoryTabs) return;
   const categories = preferredCategoryOrder(products.map(p => p.category));
+  syncAdminCategorySelect();
   if (categories.length === 0) {
     ui.categoryTabs.innerHTML = "";
     return;
@@ -583,6 +604,7 @@ function resetProductForm() {
   ui.productForm?.reset();
   if (ui.productId) ui.productId.value = "";
   if (ui.productStock) ui.productStock.value = "disponible";
+  syncAdminCategorySelect("joyas");
 }
 
 function normalizeProduct(raw, fallbackId) {
@@ -643,7 +665,7 @@ function renderAdminProducts() {
       ui.productId.value = product.id;
       ui.productName.value = product.name;
       ui.productPrice.value = product.price;
-      ui.productCategory.value = product.category;
+      syncAdminCategorySelect(product.category);
       ui.productDescription.value = product.desc;
       if (ui.productStock) ui.productStock.value = product.inStock === false ? "agotado" : "disponible";
       window.scrollTo({ top: ui.adminPanel.offsetTop - 20, behavior: "smooth" });
