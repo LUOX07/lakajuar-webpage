@@ -26,7 +26,7 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-import { firebaseConfig, ADMIN_EMAILS, STORE_WHATSAPP_NUMBER } from "./firebase-config.js";
+import { firebaseConfig, STORE_WHATSAPP_NUMBER } from "./firebase-config.js";
 
 const FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'400'%20height%3D'300'%20viewBox%3D'0%200%20400%20300'%3E%3Crect%20width%3D'400'%20height%3D'300'%20fill%3D'%23f5ede3'%2F%3E%3Ctext%20x%3D'200'%20y%3D'160'%20font-family%3D'sans-serif'%20font-size%3D'18'%20fill%3D'%23b08060'%20text-anchor%3D'middle'%3ESin%20imagen%3C%2Ftext%3E%3C%2Fsvg%3E";
 
@@ -443,10 +443,6 @@ function closeCartDrawer() {
   if (ui.cartDrawer) ui.cartDrawer.classList.remove("open");
 }
 
-function isAdminEmail(email) {
-  return ADMIN_EMAILS.map(item => item.toLowerCase()).includes(email.toLowerCase());
-}
-
 function showAuthMessage(message, isError = false) {
   if (!ui.authMessage) return;
   ui.authMessage.textContent = message;
@@ -541,14 +537,13 @@ function closeAuthModal() {
 async function upsertUserProfile(user, displayName = "") {
   const userRef = doc(db, "users", user.uid);
   const existing = await getDoc(userRef);
-  const role = isAdminEmail(user.email || "") ? "admin" : "cliente";
 
   if (!existing.exists()) {
     await setDoc(userRef, {
       uid: user.uid,
       name: displayName || user.email,
       email: user.email,
-      role,
+      role: "cliente",
       createdAt: serverTimestamp(),
     });
   }
@@ -565,7 +560,7 @@ async function ensureUserProfile(user, displayName = "") {
     currentUserProfile = {
       uid: user.uid,
       email: user.email,
-      role: isAdminEmail(user.email || "") ? "admin" : "cliente",
+      role: "cliente",
     };
   }
 }
@@ -937,7 +932,7 @@ onAuthStateChanged(auth, async user => {
     try {
       await upsertUserProfile(user);
     } catch {
-      currentUserProfile = { email: user.email, role: isAdminEmail(user.email || "") ? "admin" : "cliente" };
+      currentUserProfile = { email: user.email, role: "cliente" };
     }
   } else {
     currentUserProfile = null;

@@ -8,10 +8,5 @@ export const firebaseConfig = {
   measurementId: "G-6JXJ2KM0DD",
 };
 
-// Solo estos correos pueden ser administradores.
-export const ADMIN_EMAILS = [
-  "lakajuar@gmail.com",
-];
-
 // Numero de WhatsApp de la tienda en formato internacional, sin + ni espacios.
 export const STORE_WHATSAPP_NUMBER = "595984475612";
