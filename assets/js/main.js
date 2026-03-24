@@ -93,6 +93,7 @@ const ui = {
   cartTotal: document.getElementById("cart-total"),
   checkoutBtn: document.getElementById("checkout-btn"),
   whatsappContactLink: document.getElementById("whatsapp-contact-link"),
+  whatsappFloatBtn: document.getElementById("whatsapp-float-btn"),
   authOpenBtn: document.getElementById("auth-open-btn"),
   authLogoutBtn: document.getElementById("auth-logout-btn"),
   authRoleBadge: document.getElementById("auth-role-badge"),
@@ -164,6 +165,19 @@ function buildWhatsAppUrl(message) {
   const whatsappNumber = normalizeWhatsAppNumber(STORE_WHATSAPP_NUMBER);
   if (!whatsappNumber) return "";
   return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+}
+
+function bindWhatsAppLink(linkElement) {
+  linkElement?.addEventListener("click", event => {
+    const whatsappUrl = buildWhatsAppUrl(buildWhatsAppWelcomeMessage());
+    if (!whatsappUrl) {
+      event.preventDefault();
+      alert("Configura el numero de WhatsApp de la tienda en assets/js/firebase-config.js");
+      return;
+    }
+
+    linkElement.href = whatsappUrl;
+  });
 }
 
 function slugify(text) {
@@ -783,17 +797,8 @@ function bindUIEvents() {
   });
 
   ui.cancelEditBtn?.addEventListener("click", resetProductForm);
-
-  ui.whatsappContactLink?.addEventListener("click", event => {
-    const whatsappUrl = buildWhatsAppUrl(buildWhatsAppWelcomeMessage());
-    if (!whatsappUrl) {
-      event.preventDefault();
-      alert("Configura el numero de WhatsApp de la tienda en assets/js/firebase-config.js");
-      return;
-    }
-
-    ui.whatsappContactLink.href = whatsappUrl;
-  });
+  bindWhatsAppLink(ui.whatsappContactLink);
+  bindWhatsAppLink(ui.whatsappFloatBtn);
 }
 
 function seedLocalFallbackProducts() {
