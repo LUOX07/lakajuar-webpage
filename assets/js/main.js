@@ -752,7 +752,12 @@ function subscribeProducts() {
     productsQuery,
     snapshot => {
       if (snapshot.empty) {
-        seedLocalFallbackProducts();
+        products = [];
+        ensureCartIntegrity();
+        renderCategoryTabs();
+        applyFilters();
+        renderAdminProducts();
+        saveCart();
         return;
       }
 
