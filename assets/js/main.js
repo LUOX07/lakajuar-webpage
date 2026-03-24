@@ -240,7 +240,14 @@ function renderProducts(productList) {
   if (!ui.productGrid) return;
 
   if (productList.length === 0) {
-    ui.productGrid.innerHTML = "<p>No hay productos en esta categoría por ahora.</p>";
+    ui.productGrid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🛍️</div>
+        <div class="empty-state-face">( ˘̹ ³˘̹)</div>
+        <p class="empty-state-title">Nada por aquí todavía</p>
+        <p class="empty-state-subtitle">Esta categoría aún no tiene productos disponibles.<br>¡Volvé pronto!</p>
+      </div>
+    `;
     return;
   }
 
@@ -688,7 +695,7 @@ function bindUIEvents() {
     const price = Number(ui.productPrice.value);
     const category = ui.productCategory.value.trim().toLowerCase();
     const desc = ui.productDescription.value.trim();
-    const file = ui.productImage.files?.[0];
+    const imageUrl = (ui.productImage.value || "").trim();
 
     if (!name || !category || !desc || Number.isNaN(price)) {
       alert("Completa todos los campos obligatorios del producto.");
@@ -696,11 +703,6 @@ function bindUIEvents() {
     }
 
     try {
-      let imageUrl = "";
-      if (file) {
-        imageUrl = await uploadProductImageIfNeeded(file);
-      }
-
       if (id) {
         const productRef = doc(db, "products", id);
         const current = products.find(item => item.id === id);
