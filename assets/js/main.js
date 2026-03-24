@@ -731,7 +731,8 @@ function bindUIEvents() {
       showToast(id ? "Producto actualizado correctamente." : "Producto creado correctamente.", "success");
       resetProductForm();
     } catch (error) {
-      alert(getFriendlyDataError(error));
+      const code = error?.code || "desconocido";
+      alert(`${getFriendlyDataError(error)}\n\nCódigo: ${code}`);
     }
   });
 
