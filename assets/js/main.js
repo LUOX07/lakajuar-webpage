@@ -26,7 +26,7 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-import { firebaseConfig, ADMIN_EMAILS } from "./firebase-config.js";
+import { firebaseConfig, ADMIN_EMAILS, STORE_WHATSAPP_NUMBER } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -131,6 +131,28 @@ let toastTimer = null;
 
 function formatMoney(value) {
   return `Gs. ${Math.round(value).toLocaleString("es-PY")}`;
+}
+
+function normalizeWhatsAppNumber(rawNumber) {
+  return String(rawNumber || "").replace(/\D/g, "");
+}
+
+function buildWhatsAppCheckoutMessage(items, totals) {
+  const lines = [
+    "Hola LAKAJUAR, quiero coordinar este pedido:",
+    "",
+    "Productos:",
+    ...items.map(item => `- ${item.quantity} x ${item.name} (${formatMoney(item.price)} c/u) = ${formatMoney(item.price * item.quantity)}`),
+    "",
+    `Subtotal: ${formatMoney(totals.subtotal)}`,
+    `Descuento: ${formatMoney(totals.discountAmount)}`,
+    `Envio: ${formatMoney(totals.shipping)}`,
+    `Total estimado: ${formatMoney(totals.total)}`,
+    "",
+    "Quedo atento para coordinar pago y entrega.",
+  ];
+
+  return lines.join("\n");
 }
 
 function slugify(text) {
@@ -625,16 +647,22 @@ function bindUIEvents() {
 
   ui.checkoutBtn?.addEventListener("click", () => {
     const totals = calculateCartTotal();
+    const items = getCartItems();
     if (totals.total <= 0) {
       alert("Tu carrito está vacío. Agrega productos antes de pagar.");
       return;
     }
 
-    alert(
-      `Total a pagar ${formatMoney(totals.total)} (subtotal ${formatMoney(totals.subtotal)}, envío ${formatMoney(
-        totals.shipping,
-      )}, descuento ${formatMoney(totals.discountAmount)}). Gracias por comprar en LAKAJUAR.`,
-    );
+    const whatsappNumber = normalizeWhatsAppNumber(STORE_WHATSAPP_NUMBER);
+    if (!whatsappNumber) {
+      alert("Configura el numero de WhatsApp de la tienda en assets/js/firebase-config.js");
+      return;
+    }
+
+    const message = buildWhatsAppCheckoutMessage(items, totals);
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    showToast("Te redirigimos a WhatsApp para coordinar tu compra.", "success");
 
     cart = [];
     activeDiscount = 0;

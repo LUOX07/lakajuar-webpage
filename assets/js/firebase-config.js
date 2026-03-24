@@ -12,3 +12,6 @@ export const firebaseConfig = {
 export const ADMIN_EMAILS = [
   "lakajuar@gmail.com",
 ];
+
+// Numero de WhatsApp de la tienda en formato internacional, sin + ni espacios.
+export const STORE_WHATSAPP_NUMBER = "595000000000";
