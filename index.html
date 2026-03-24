@@ -57,40 +57,46 @@
       <h2>Panel Admin</h2>
       <p>Gestiona productos, precios, categorías e imágenes de tu tienda.</p>
 
-      <form id="product-form" class="admin-form">
-        <input id="product-id" type="hidden" />
+      <div class="admin-shell">
+        <div class="admin-form-card">
+          <form id="product-form" class="admin-form">
+            <input id="product-id" type="hidden" />
 
-        <label for="product-name">Nombre del producto</label>
-        <input id="product-name" type="text" required />
+            <label for="product-name">Nombre del producto</label>
+            <input id="product-name" type="text" required />
 
-        <label for="product-price">Precio en guaraníes (Gs.)</label>
-        <input id="product-price" type="number" min="0" step="100" required />
+            <label for="product-price">Precio en guaraníes (Gs.)</label>
+            <input id="product-price" type="number" min="0" step="100" required />
 
-        <label for="product-category">Categoría</label>
-        <input id="product-category" type="text" placeholder="joyas, cases, accesorios o nueva categoría" required />
+            <label for="product-category">Categoría</label>
+            <input id="product-category" type="text" placeholder="joyas, cases, accesorios o nueva categoría" required />
 
-        <label for="product-description">Descripción</label>
-        <textarea id="product-description" rows="3" required></textarea>
+            <label for="product-description">Descripción</label>
+            <textarea id="product-description" rows="3" required></textarea>
 
-        <label for="product-stock">Estado de stock</label>
-        <select id="product-stock" required>
-          <option value="disponible">Disponible</option>
-          <option value="agotado">Agotado</option>
-        </select>
+            <label for="product-stock">Estado de stock</label>
+            <select id="product-stock" required>
+              <option value="disponible">Disponible</option>
+              <option value="agotado">Agotado</option>
+            </select>
 
-        <label for="product-image">URL de la imagen del producto (opcional)</label>
-        <input id="product-image" type="text" placeholder="https://ejemplo.com/foto.jpg" />
+            <label for="product-image">URL de la imagen del producto (opcional)</label>
+            <input id="product-image" type="text" placeholder="https://ejemplo.com/foto.jpg" />
 
-        <button id="save-product-btn" class="btn" type="submit">Guardar producto</button>
-        <button id="cancel-edit-btn" class="btn secondary" type="button">Cancelar edición</button>
-      </form>
+            <button id="save-product-btn" class="btn" type="submit">Guardar producto</button>
+            <button id="cancel-edit-btn" class="btn secondary" type="button">Cancelar edición</button>
+          </form>
+        </div>
 
-      <div class="admin-tools">
-        <label for="admin-search">Buscar en panel admin</label>
-        <input id="admin-search" type="search" placeholder="Buscar por nombre o categoría..." />
+        <div class="admin-list-card">
+          <div class="admin-tools">
+            <label for="admin-search">Buscar en panel admin</label>
+            <input id="admin-search" type="search" placeholder="Buscar por nombre o categoría..." />
+          </div>
+
+          <div id="admin-products" class="admin-products"></div>
+        </div>
       </div>
-
-      <div id="admin-products" class="admin-products"></div>
     </section>
   </main>
 
