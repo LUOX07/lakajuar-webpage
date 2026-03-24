@@ -14,4 +14,4 @@ export const ADMIN_EMAILS = [
 ];
 
 // Numero de WhatsApp de la tienda en formato internacional, sin + ni espacios.
-export const STORE_WHATSAPP_NUMBER = "595982912585";
+export const STORE_WHATSAPP_NUMBER = "595982622521";
