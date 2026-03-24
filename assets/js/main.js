@@ -26,14 +26,14 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-import { firebaseConfig, STORE_WHATSAPP_NUMBER } from "./firebase-config.js";
 
 const FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'400'%20height%3D'300'%20viewBox%3D'0%200%20400%20300'%3E%3Crect%20width%3D'400'%20height%3D'300'%20fill%3D'%23f5ede3'%2F%3E%3Ctext%20x%3D'200'%20y%3D'160'%20font-family%3D'sans-serif'%20font-size%3D'18'%20fill%3D'%23b08060'%20text-anchor%3D'middle'%3ESin%20imagen%3C%2Ftext%3E%3C%2Fsvg%3E";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+let runtimeConfig = null;
+let app = null;
+let auth = null;
+let db = null;
+let storage = null;
 
 const DEFAULT_PRODUCTS = [
   {
@@ -137,6 +137,72 @@ let currentUserProfile = null;
 let toastTimer = null;
 let adminSearchQuery = "";
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value).replace(/`/g, "&#96;");
+}
+
+function sanitizeImageUrl(url) {
+  const trimmed = String(url || "").trim();
+  if (!trimmed) return FALLBACK_IMG;
+  if (trimmed === FALLBACK_IMG) return FALLBACK_IMG;
+
+  try {
+    const resolved = new URL(trimmed, window.location.origin);
+    if (["http:", "https:"].includes(resolved.protocol)) {
+      return resolved.toString();
+    }
+  } catch {
+    return FALLBACK_IMG;
+  }
+
+  return FALLBACK_IMG;
+}
+
+function getStoreWhatsAppNumber() {
+  return runtimeConfig?.storeWhatsAppNumber || "";
+}
+
+function validateRuntimeConfig(config) {
+  const firebase = config?.firebaseConfig;
+  const requiredKeys = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
+  return requiredKeys.every(key => firebase?.[key] && !String(firebase[key]).startsWith("REEMPLAZA_"));
+}
+
+async function loadRuntimeConfig() {
+  const response = await fetch("/api/public-config", {
+    method: "GET",
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`runtime-config-${response.status}`);
+  }
+
+  const config = await response.json();
+  if (!validateRuntimeConfig(config)) {
+    throw new Error("runtime-config-invalid");
+  }
+
+  runtimeConfig = config;
+}
+
+function initializeFirebaseServices() {
+  app = initializeApp(runtimeConfig.firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+}
+
 function formatMoney(value) {
   return `Gs. ${Math.round(value).toLocaleString("es-PY")}`;
 }
@@ -168,7 +234,7 @@ function buildWhatsAppCheckoutMessage(items, totals) {
 }
 
 function buildWhatsAppUrl(message) {
-  const whatsappNumber = normalizeWhatsAppNumber(STORE_WHATSAPP_NUMBER);
+  const whatsappNumber = normalizeWhatsAppNumber(getStoreWhatsAppNumber());
   if (!whatsappNumber) return "";
   return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 }
@@ -178,7 +244,7 @@ function bindWhatsAppLink(linkElement) {
     const whatsappUrl = buildWhatsAppUrl(buildWhatsAppWelcomeMessage());
     if (!whatsappUrl) {
       event.preventDefault();
-      alert("Configura el numero de WhatsApp de la tienda en assets/js/firebase-config.js");
+      showToast("El contacto de WhatsApp no esta disponible en este momento.", "error");
       return;
     }
 
@@ -218,7 +284,7 @@ function syncAdminCategorySelect(selectedValue = "") {
   }
 
   ui.productCategory.innerHTML = allCategories
-    .map(category => `<option value="${category}">${category.toUpperCase()}</option>`)
+    .map(category => `<option value="${escapeAttribute(category)}">${escapeHtml(category.toUpperCase())}</option>`)
     .join("");
 
   const nextValue = normalizedSelected || ui.productCategory.value || allCategories[0];
@@ -326,12 +392,12 @@ function renderProducts(productList) {
     .map(
       p => `
     <article class="product-card">
-      <img src="${p.img}" alt="${p.name}" onerror="handleImgError(this)" />
-      <h3>${p.name}</h3>
-      <p>${p.desc}</p>
+      <img src="${escapeAttribute(p.img)}" alt="${escapeAttribute(p.name)}" onerror="handleImgError(this)" />
+      <h3>${escapeHtml(p.name)}</h3>
+      <p>${escapeHtml(p.desc)}</p>
       <div class="stock-badge ${p.inStock === false ? "agotado" : "disponible"}">${p.inStock === false ? "Agotado" : "Disponible"}</div>
       <div class="price">${formatMoney(p.price)}</div>
-      <button class="btn ${p.inStock === false ? "btn-out-stock" : ""}" data-add-cart="${p.id}" ${p.inStock === false ? "disabled" : ""}>
+      <button class="btn ${p.inStock === false ? "btn-out-stock" : ""}" data-add-cart="${escapeAttribute(p.id)}" ${p.inStock === false ? "disabled" : ""}>
         ${p.inStock === false ? "Agotado" : "Agregar al carrito"}
       </button>
     </article>
@@ -363,8 +429,8 @@ function renderCategoryTabs() {
   ui.categoryTabs.innerHTML = categories
     .map(
       cat => `
-      <button class="tab-button ${cat === currentCategory ? "active" : ""}" data-cat="${cat}" role="tab">
-        ${cat.toUpperCase()}
+      <button class="tab-button ${cat === currentCategory ? "active" : ""}" data-cat="${escapeAttribute(cat)}" role="tab">
+        ${escapeHtml(cat.toUpperCase())}
       </button>
     `,
     )
@@ -402,14 +468,14 @@ function renderCartDrawer() {
         item => `
       <div class="cart-item">
         <div class="item-details">
-          <div class="item-name">${item.name}</div>
+          <div class="item-name">${escapeHtml(item.name)}</div>
           <div class="item-price">${formatMoney(item.price)} c/u</div>
         </div>
         <div class="item-controls">
-          <button class="qty-btn" data-action="decrease" data-id="${item.id}">-</button>
+          <button class="qty-btn" data-action="decrease" data-id="${escapeAttribute(item.id)}">-</button>
           <span>${item.quantity}</span>
-          <button class="qty-btn" data-action="increase" data-id="${item.id}">+</button>
-          <button class="remove-item" data-id="${item.id}" aria-label="Quitar ${item.name}">x</button>
+          <button class="qty-btn" data-action="increase" data-id="${escapeAttribute(item.id)}">+</button>
+          <button class="remove-item" data-id="${escapeAttribute(item.id)}" aria-label="Quitar ${escapeAttribute(item.name)}">x</button>
         </div>
       </div>
     `,
@@ -610,7 +676,7 @@ function normalizeProduct(raw, fallbackId) {
     price: Number(raw.price || 0),
     category: (raw.category || "accesorios").toLowerCase().trim(),
     desc: raw.desc || "",
-    img: raw.img || FALLBACK_IMG,
+    img: sanitizeImageUrl(raw.img),
     inStock: raw.inStock !== false,
     active: raw.active !== false,
   };
@@ -628,10 +694,10 @@ function renderAdminProducts() {
     .map(
       p => `
       <div class="admin-product-row" data-product-row-id="${p.id}">
-        <img src="${p.img}" alt="${p.name}" onerror="handleImgError(this)" />
+        <img src="${escapeAttribute(p.img)}" alt="${escapeAttribute(p.name)}" onerror="handleImgError(this)" />
         <div class="admin-product-main">
-          <strong>${p.name}</strong>
-          <div>${formatMoney(p.price)} - ${p.category.toUpperCase()}</div>
+          <strong>${escapeHtml(p.name)}</strong>
+          <div>${formatMoney(p.price)} - ${escapeHtml(p.category.toUpperCase())}</div>
           <div class="stock-badge ${p.inStock === false ? "agotado" : "disponible"}">${p.inStock === false ? "Agotado" : "Disponible"}</div>
           <div class="admin-quick-edit">
             <input type="number" min="0" step="100" value="${p.price}" data-quick-price />
@@ -639,12 +705,12 @@ function renderAdminProducts() {
               <option value="disponible" ${p.inStock === false ? "" : "selected"}>Disponible</option>
               <option value="agotado" ${p.inStock === false ? "selected" : ""}>Agotado</option>
             </select>
-            <button class="btn secondary" data-quick-save-id="${p.id}">Guardar rápido</button>
+            <button class="btn secondary" data-quick-save-id="${escapeAttribute(p.id)}">Guardar rápido</button>
           </div>
         </div>
         <div class="admin-product-actions">
-          <button class="btn" data-edit-id="${p.id}">Editar</button>
-          <button class="btn secondary" data-delete-id="${p.id}">Eliminar</button>
+          <button class="btn" data-edit-id="${escapeAttribute(p.id)}">Editar</button>
+          <button class="btn secondary" data-delete-id="${escapeAttribute(p.id)}">Eliminar</button>
         </div>
       </div>
     `,
@@ -716,8 +782,8 @@ function normalizeImageUrl(url) {
   if (!url) return "";
   // Convierte https://imgur.com/XXXXX  →  https://i.imgur.com/XXXXX.jpg
   const imgurPage = url.match(/^https?:\/\/(?:www\.)?imgur\.com\/([a-zA-Z0-9]+)$/);
-  if (imgurPage) return `https://i.imgur.com/${imgurPage[1]}.jpg`;
-  return url;
+  if (imgurPage) return sanitizeImageUrl(`https://i.imgur.com/${imgurPage[1]}.jpg`);
+  return sanitizeImageUrl(url);
 }
 
 function bindUIEvents() {
@@ -759,7 +825,7 @@ function bindUIEvents() {
     const message = buildWhatsAppCheckoutMessage(items, totals);
     const whatsappUrl = buildWhatsAppUrl(message);
     if (!whatsappUrl) {
-      alert("Configura el numero de WhatsApp de la tienda en assets/js/firebase-config.js");
+      showToast("El contacto de WhatsApp no esta disponible en este momento.", "error");
       return;
     }
 
@@ -774,6 +840,7 @@ function bindUIEvents() {
   ui.authOpenBtn?.addEventListener("click", openAuthModal);
   ui.authCloseBtn?.addEventListener("click", closeAuthModal);
   ui.authLogoutBtn?.addEventListener("click", async () => {
+    if (!auth) return;
     await signOut(auth);
   });
 
@@ -790,6 +857,11 @@ function bindUIEvents() {
 
   ui.authForm?.addEventListener("submit", async event => {
     event.preventDefault();
+    if (!auth) {
+      showAuthMessage("El acceso no esta disponible hasta cargar la configuracion segura.", true);
+      return;
+    }
+
     const email = ui.authEmail?.value?.trim();
     const password = ui.authPassword?.value;
     const name = ui.authName?.value?.trim();
@@ -822,6 +894,11 @@ function bindUIEvents() {
 
   ui.productForm?.addEventListener("submit", async event => {
     event.preventDefault();
+    if (!db) {
+      showToast("La administracion no esta disponible hasta cargar la configuracion segura.", "error");
+      return;
+    }
+
     if (currentUserProfile?.role !== "admin") {
       alert("Solo la cuenta admin puede crear o editar productos.");
       return;
@@ -850,7 +927,7 @@ function bindUIEvents() {
           category,
           desc,
           inStock,
-          img: imageUrl || current?.img || "https://via.placeholder.com/400x300?text=Producto",
+          img: imageUrl || current?.img || FALLBACK_IMG,
           active: true,
           updatedAt: serverTimestamp(),
         });
@@ -861,7 +938,7 @@ function bindUIEvents() {
           category,
           desc,
           inStock,
-          img: imageUrl || "https://via.placeholder.com/400x300?text=Producto",
+          img: imageUrl || FALLBACK_IMG,
           active: true,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -927,37 +1004,39 @@ function subscribeProducts() {
   );
 }
 
-onAuthStateChanged(auth, async user => {
-  if (user) {
-    try {
-      await upsertUserProfile(user);
-    } catch {
-      currentUserProfile = { email: user.email, role: "cliente" };
+function attachAuthObserver() {
+  if (!auth) return;
+
+  onAuthStateChanged(auth, async user => {
+    if (user) {
+      try {
+        await upsertUserProfile(user);
+      } catch {
+        currentUserProfile = { email: user.email, role: "cliente" };
+      }
+    } else {
+      currentUserProfile = null;
     }
-  } else {
-    currentUserProfile = null;
-  }
 
-  updateAuthUI();
-  renderAdminProducts();
-});
-
-function validateFirebaseConfig() {
-  const values = Object.values(firebaseConfig || {});
-  return values.every(value => value && !String(value).startsWith("REEMPLAZA_"));
+    updateAuthUI();
+    renderAdminProducts();
+  });
 }
 
-function bootstrap() {
+async function bootstrap() {
   bindUIEvents();
   setAuthMode(false);
 
-  if (!validateFirebaseConfig()) {
+  try {
+    await loadRuntimeConfig();
+    initializeFirebaseServices();
+    attachAuthObserver();
+    subscribeProducts();
+  } catch {
     seedLocalFallbackProducts();
-    showAuthMessage("Completa tu configuración Firebase en assets/js/firebase-config.js", true);
-    return;
+    showAuthMessage("No se pudo cargar la configuracion segura del sitio.", true);
+    showToast("El sitio cargo en modo limitado por una configuracion faltante.", "error");
   }
-
-  subscribeProducts();
 }
 
 window.handleImgError = function (img) {
