@@ -30,12 +30,6 @@ import { firebaseConfig, ADMIN_EMAILS, STORE_WHATSAPP_NUMBER } from "./firebase-
 
 const FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'400'%20height%3D'300'%20viewBox%3D'0%200%20400%20300'%3E%3Crect%20width%3D'400'%20height%3D'300'%20fill%3D'%23f5ede3'%2F%3E%3Ctext%20x%3D'200'%20y%3D'160'%20font-family%3D'sans-serif'%20font-size%3D'18'%20fill%3D'%23b08060'%20text-anchor%3D'middle'%3ESin%20imagen%3C%2Ftext%3E%3C%2Fsvg%3E";
 
-const DISCOUNT_CODES = {
-  "LAKAJUAR10": 0.10,
-  "PROMO15": 0.15,
-  "BIENVENIDO": 0.05,
-};
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -131,15 +125,12 @@ const ui = {
   cancelEditBtn: document.getElementById("cancel-edit-btn"),
   adminSearchInput: document.getElementById("admin-search"),
   adminProducts: document.getElementById("admin-products"),
-  couponCode: document.getElementById("coupon-code"),
-  couponApplyBtn: document.getElementById("coupon-apply-btn"),
-  couponMessage: document.getElementById("coupon-message"),
   clearCartBtn: document.getElementById("clear-cart-btn"),
 };
 
 let products = [];
 let cart = JSON.parse(localStorage.getItem("lakajuarCart") || "[]");
-let activeDiscount = Number(JSON.parse(localStorage.getItem("lakajuarDiscount") || "0"));
+const activeDiscount = 0;
 let currentCategory = "joyas";
 let isRegisterMode = false;
 let currentUserProfile = null;
@@ -264,13 +255,12 @@ function calculateShipping(subtotal) {
 
 function calculateCartTotal() {
   const subtotal = calculateCartSubtotal();
-  const discountAmount = subtotal * activeDiscount;
-  const shipping = calculateShipping(subtotal - discountAmount);
+  const shipping = calculateShipping(subtotal);
   return {
     subtotal,
-    discountAmount,
+    discountAmount: 0,
     shipping,
-    total: subtotal - discountAmount + shipping,
+    total: subtotal + shipping,
   };
 }
 
@@ -287,7 +277,6 @@ function updateCartSummary() {
 
 function saveCart() {
   localStorage.setItem("lakajuarCart", JSON.stringify(cart));
-  localStorage.setItem("lakajuarDiscount", JSON.stringify(activeDiscount));
   updateCartSummary();
   renderCartDrawer();
 }
@@ -783,7 +772,6 @@ function bindUIEvents() {
     showToast("Te redirigimos a WhatsApp para coordinar tu compra.", "success");
 
     cart = [];
-    activeDiscount = 0;
     saveCart();
     closeCartDrawer();
   });
@@ -897,30 +885,10 @@ function bindUIEvents() {
   bindWhatsAppLink(ui.whatsappContactLink);
   bindWhatsAppLink(ui.whatsappFloatBtn);
 
-  ui.couponApplyBtn?.addEventListener("click", () => {
-    const code = (ui.couponCode?.value || "").trim().toUpperCase();
-    if (!code) {
-      if (ui.couponMessage) { ui.couponMessage.textContent = "Ingresa un código de cupón."; ui.couponMessage.className = "coupon-message coupon-error"; }
-      return;
-    }
-    const discount = DISCOUNT_CODES[code];
-    if (discount === undefined) {
-      if (ui.couponMessage) { ui.couponMessage.textContent = "Cupón inválido o expirado."; ui.couponMessage.className = "coupon-message coupon-error"; }
-      return;
-    }
-    activeDiscount = discount;
-    saveCart();
-    if (ui.couponMessage) { ui.couponMessage.textContent = `✓ ${Math.round(discount * 100)}% de descuento aplicado`; ui.couponMessage.className = "coupon-message coupon-ok"; }
-    showToast(`Cupón ${code} aplicado. ${Math.round(discount * 100)}% de descuento.`, "success");
-  });
-
   ui.clearCartBtn?.addEventListener("click", () => {
     if (cart.length === 0) return;
     if (!confirm("¿Vaciar todo el carrito?")) return;
     cart = [];
-    activeDiscount = 0;
-    if (ui.couponCode) ui.couponCode.value = "";
-    if (ui.couponMessage) { ui.couponMessage.textContent = ""; ui.couponMessage.className = "coupon-message"; }
     saveCart();
     showToast("Carrito vaciado.", "success");
   });
