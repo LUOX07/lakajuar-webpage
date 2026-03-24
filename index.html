@@ -3,7 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LAKAJUAR - Tienda virtual</title>
+  <title>LAKAJUAR | Joyas, Cases y Accesorios en Paraguay</title>
+  <meta name="description" content="Descubre joyas, cases y accesorios de LAKAJUAR. Compra online y coordina tu pedido por WhatsApp de forma rapida y segura." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://luox07.github.io/lakajuar-webpage/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="LAKAJUAR" />
+  <meta property="og:title" content="LAKAJUAR | Joyas, Cases y Accesorios en Paraguay" />
+  <meta property="og:description" content="Compra en LAKAJUAR y coordina tu pedido por WhatsApp. Estilo, calidad y atencion personalizada." />
+  <meta property="og:url" content="https://luox07.github.io/lakajuar-webpage/" />
+  <meta property="og:image" content="https://luox07.github.io/lakajuar-webpage/assets/images/products/collar-lakajuar.jpg" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="LAKAJUAR | Joyas, Cases y Accesorios en Paraguay" />
+  <meta name="twitter:description" content="Compra en LAKAJUAR y coordina tu pedido por WhatsApp. Estilo, calidad y atencion personalizada." />
+  <meta name="twitter:image" content="https://luox07.github.io/lakajuar-webpage/assets/images/products/collar-lakajuar.jpg" />
   <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
@@ -57,12 +72,23 @@
         <label for="product-description">Descripción</label>
         <textarea id="product-description" rows="3" required></textarea>
 
+        <label for="product-stock">Estado de stock</label>
+        <select id="product-stock" required>
+          <option value="disponible">Disponible</option>
+          <option value="agotado">Agotado</option>
+        </select>
+
         <label for="product-image">URL de la imagen del producto (opcional)</label>
         <input id="product-image" type="text" placeholder="https://ejemplo.com/foto.jpg" />
 
         <button id="save-product-btn" class="btn" type="submit">Guardar producto</button>
         <button id="cancel-edit-btn" class="btn secondary" type="button">Cancelar edición</button>
       </form>
+
+      <div class="admin-tools">
+        <label for="admin-search">Buscar en panel admin</label>
+        <input id="admin-search" type="search" placeholder="Buscar por nombre o categoría..." />
+      </div>
 
       <div id="admin-products" class="admin-products"></div>
     </section>

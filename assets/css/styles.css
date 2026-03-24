@@ -235,7 +235,26 @@ body::before {
 }
 
 .admin-form input,
-.admin-form textarea {
+.admin-form textarea,
+.admin-form select {
+    border: 1px solid #d7bca4;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.95rem;
+}
+
+.admin-tools {
+    margin: 8px 0 16px;
+    display: grid;
+    gap: 8px;
+}
+
+.admin-tools label {
+    font-weight: 700;
+    color: #6a4527;
+}
+
+.admin-tools input {
     border: 1px solid #d7bca4;
     border-radius: 8px;
     padding: 10px;
@@ -263,6 +282,28 @@ body::before {
     border-radius: 10px;
     padding: 8px;
     background: #fff;
+}
+
+.admin-product-main {
+    display: grid;
+    gap: 6px;
+}
+
+.admin-quick-edit {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.admin-quick-edit input,
+.admin-quick-edit select {
+    border: 1px solid #d7bca4;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 0.9rem;
+    min-width: 110px;
 }
 
 .admin-product-row img {
@@ -605,6 +646,39 @@ body::before {
     font-size: 2rem;
 }
 
+.stock-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    margin-bottom: 8px;
+}
+
+.stock-badge.disponible {
+    background: rgba(70, 160, 95, 0.16);
+    color: #1c7a34;
+    border: 1px solid rgba(70, 160, 95, 0.3);
+}
+
+.stock-badge.agotado {
+    background: rgba(191, 76, 76, 0.14);
+    color: #9b2f2f;
+    border: 1px solid rgba(191, 76, 76, 0.32);
+}
+
+.btn-out-stock,
+.btn-out-stock:hover {
+    background: linear-gradient(135deg, #bcaea0, #a19386);
+    box-shadow: none;
+    filter: none;
+    transform: none;
+    cursor: not-allowed;
+}
+
 .btn {
     display: inline-block;
     background: linear-gradient(125deg, var(--peach-500), var(--peach-400));
@@ -927,6 +1001,16 @@ footer a:hover,
         min-height: 58px;
         padding: 14px 18px;
         font-size: 1.1rem;
+    }
+
+    .admin-product-row {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-product-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
     }
 }
 
