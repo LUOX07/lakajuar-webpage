@@ -28,6 +28,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 import { firebaseConfig, ADMIN_EMAILS, STORE_WHATSAPP_NUMBER } from "./firebase-config.js";
 
+const FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'400'%20height%3D'300'%20viewBox%3D'0%200%20400%20300'%3E%3Crect%20width%3D'400'%20height%3D'300'%20fill%3D'%23f5ede3'%2F%3E%3Ctext%20x%3D'200'%20y%3D'160'%20font-family%3D'sans-serif'%20font-size%3D'18'%20fill%3D'%23b08060'%20text-anchor%3D'middle'%3ESin%20imagen%3C%2Ftext%3E%3C%2Fsvg%3E";
+
+const DISCOUNT_CODES = {
+  "LAKAJUAR10": 0.10,
+  "PROMO15": 0.15,
+  "BIENVENIDO": 0.05,
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -123,6 +131,10 @@ const ui = {
   cancelEditBtn: document.getElementById("cancel-edit-btn"),
   adminSearchInput: document.getElementById("admin-search"),
   adminProducts: document.getElementById("admin-products"),
+  couponCode: document.getElementById("coupon-code"),
+  couponApplyBtn: document.getElementById("coupon-apply-btn"),
+  couponMessage: document.getElementById("coupon-message"),
+  clearCartBtn: document.getElementById("clear-cart-btn"),
 };
 
 let products = [];
@@ -325,7 +337,7 @@ function renderProducts(productList) {
     .map(
       p => `
     <article class="product-card">
-      <img src="${p.img}" alt="${p.name}" />
+      <img src="${p.img}" alt="${p.name}" onerror="handleImgError(this)" />
       <h3>${p.name}</h3>
       <p>${p.desc}</p>
       <div class="stock-badge ${p.inStock === false ? "agotado" : "disponible"}">${p.inStock === false ? "Agotado" : "Disponible"}</div>
@@ -431,7 +443,7 @@ function addToCart(productId) {
     return;
   }
   addItemToCart(productId, 1);
-  alert(`${product.name} agregado al carrito.`);
+  showToast(`${product.name} agregado al carrito. 🛒`, "success");
 }
 
 function openCartDrawer() {
@@ -614,7 +626,7 @@ function normalizeProduct(raw, fallbackId) {
     price: Number(raw.price || 0),
     category: (raw.category || "accesorios").toLowerCase().trim(),
     desc: raw.desc || "",
-    img: raw.img || "https://via.placeholder.com/400x300?text=Producto",
+    img: raw.img || FALLBACK_IMG,
     inStock: raw.inStock !== false,
     active: raw.active !== false,
   };
@@ -632,7 +644,7 @@ function renderAdminProducts() {
     .map(
       p => `
       <div class="admin-product-row" data-product-row-id="${p.id}">
-        <img src="${p.img}" alt="${p.name}" />
+        <img src="${p.img}" alt="${p.name}" onerror="handleImgError(this)" />
         <div class="admin-product-main">
           <strong>${p.name}</strong>
           <div>${formatMoney(p.price)} - ${p.category.toUpperCase()}</div>
@@ -684,7 +696,7 @@ function renderAdminProducts() {
       const inStock = stockSelect?.value !== "agotado";
 
       if (Number.isNaN(newPrice) || newPrice < 0) {
-        alert("Ingresa un precio válido en la edición rápida.");
+        showToast("Ingresa un precio válido en la edición rápida.", "error");
         return;
       }
 
@@ -841,7 +853,7 @@ function bindUIEvents() {
     const imageUrl = normalizeImageUrl((ui.productImage.value || "").trim());
 
     if (!name || !category || !desc || Number.isNaN(price)) {
-      alert("Completa todos los campos obligatorios del producto.");
+      showToast("Completa todos los campos obligatorios del producto.", "error");
       return;
     }
 
@@ -884,6 +896,34 @@ function bindUIEvents() {
   ui.cancelEditBtn?.addEventListener("click", resetProductForm);
   bindWhatsAppLink(ui.whatsappContactLink);
   bindWhatsAppLink(ui.whatsappFloatBtn);
+
+  ui.couponApplyBtn?.addEventListener("click", () => {
+    const code = (ui.couponCode?.value || "").trim().toUpperCase();
+    if (!code) {
+      if (ui.couponMessage) { ui.couponMessage.textContent = "Ingresa un código de cupón."; ui.couponMessage.className = "coupon-message coupon-error"; }
+      return;
+    }
+    const discount = DISCOUNT_CODES[code];
+    if (discount === undefined) {
+      if (ui.couponMessage) { ui.couponMessage.textContent = "Cupón inválido o expirado."; ui.couponMessage.className = "coupon-message coupon-error"; }
+      return;
+    }
+    activeDiscount = discount;
+    saveCart();
+    if (ui.couponMessage) { ui.couponMessage.textContent = `✓ ${Math.round(discount * 100)}% de descuento aplicado`; ui.couponMessage.className = "coupon-message coupon-ok"; }
+    showToast(`Cupón ${code} aplicado. ${Math.round(discount * 100)}% de descuento.`, "success");
+  });
+
+  ui.clearCartBtn?.addEventListener("click", () => {
+    if (cart.length === 0) return;
+    if (!confirm("¿Vaciar todo el carrito?")) return;
+    cart = [];
+    activeDiscount = 0;
+    if (ui.couponCode) ui.couponCode.value = "";
+    if (ui.couponMessage) { ui.couponMessage.textContent = ""; ui.couponMessage.className = "coupon-message"; }
+    saveCart();
+    showToast("Carrito vaciado.", "success");
+  });
 }
 
 function seedLocalFallbackProducts() {
@@ -956,5 +996,10 @@ function bootstrap() {
 
   subscribeProducts();
 }
+
+window.handleImgError = function (img) {
+  img.onerror = null;
+  img.src = FALLBACK_IMG;
+};
 
 bootstrap();

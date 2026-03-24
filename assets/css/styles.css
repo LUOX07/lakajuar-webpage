@@ -859,7 +859,39 @@ body::before {
 }
 
 .coupon-section {
-    display: none;
+    padding: 10px 14px;
+    border-top: 1px solid #e7d6c7;
+    display: grid;
+    gap: 8px;
+}
+
+.coupon-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #6a4527;
+}
+
+.coupon-section input {
+    border: 1px solid #d7bca4;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.95rem;
+    width: 100%;
+}
+
+.coupon-message {
+    font-size: 0.84rem;
+    min-height: 16px;
+}
+
+.coupon-ok {
+    color: #1c7a34;
+    font-weight: 700;
+}
+
+.coupon-error {
+    color: #9b2f2f;
+    font-weight: 700;
 }
 
 .cart-drawer-footer {

@@ -21,6 +21,15 @@
   <meta name="twitter:image" content="https://lakajuar-webpage.pages.dev/assets/images/products/collar-lakajuar.jpg" />
   <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/styles.css" />
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6JXJ2KM0DD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6JXJ2KM0DD');
+  </script>
 </head>
 <body>
   <header class="site-header">
@@ -178,6 +187,7 @@
       <div class="cart-total-line"><span>Envío</span> <strong id="cart-shipping">Gs. 0</strong></div>
       <div class="cart-total-line total"><span>Total</span> <strong id="cart-total">Gs. 0</strong></div>
       <button id="checkout-btn" class="btn">Ir a pagar</button>
+      <button id="clear-cart-btn" class="btn secondary">🗑️ Vaciar carrito</button>
     </div>
   </aside>
 
