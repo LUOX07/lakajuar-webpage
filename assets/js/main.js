@@ -93,7 +93,6 @@ const ui = {
   cartItems: document.getElementById("cart-items"),
   cartSubtotal: document.getElementById("cart-subtotal"),
   cartDiscount: document.getElementById("cart-discount"),
-  cartShipping: document.getElementById("cart-shipping"),
   cartTotal: document.getElementById("cart-total"),
   checkoutBtn: document.getElementById("checkout-btn"),
   whatsappContactLink: document.getElementById("whatsapp-contact-link"),
@@ -226,13 +225,50 @@ function buildWhatsAppCheckoutMessage(items, totals) {
     "",
     `Subtotal: ${formatMoney(totals.subtotal)}`,
     `Descuento: ${formatMoney(totals.discountAmount)}`,
-    `Envio: ${formatMoney(totals.shipping)}`,
     `Total estimado: ${formatMoney(totals.total)}`,
     "",
     "Quedo atento para coordinar pago y entrega.",
   ];
 
   return lines.join("\n");
+}
+
+function normalizeStockStatus(value) {
+  const normalized = String(value || "").toLowerCase().trim();
+  if (normalized === "agotado" || normalized === "proximo_ingreso") return normalized;
+  return "disponible";
+}
+
+function getProductStockStatus(product) {
+  if (!product) return "disponible";
+  return normalizeStockStatus(product.stockStatus || (product.inStock === false ? "agotado" : "disponible"));
+}
+
+function getStockBadgeConfig(stockStatus) {
+  if (stockStatus === "agotado") {
+    return {
+      className: "agotado",
+      label: "Agotado",
+      buttonLabel: "Agotado",
+      canAddToCart: false,
+    };
+  }
+
+  if (stockStatus === "proximo_ingreso") {
+    return {
+      className: "proximo-ingreso",
+      label: "Próximo ingreso",
+      buttonLabel: "Próximo ingreso",
+      canAddToCart: false,
+    };
+  }
+
+  return {
+    className: "disponible",
+    label: "Disponible",
+    buttonLabel: "Agregar al carrito",
+    canAddToCart: true,
+  };
 }
 
 function buildWhatsAppUrl(message) {
@@ -315,20 +351,12 @@ function calculateCartSubtotal() {
   return getCartItems().reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
-function calculateShipping(subtotal) {
-  if (subtotal === 0) return 0;
-  if (subtotal >= 120000) return 0;
-  return 15000;
-}
-
 function calculateCartTotal() {
   const subtotal = calculateCartSubtotal();
-  const shipping = calculateShipping(subtotal);
   return {
     subtotal,
     discountAmount: 0,
-    shipping,
-    total: subtotal + shipping,
+    total: subtotal,
   };
 }
 
@@ -392,18 +420,21 @@ function renderProducts(productList) {
 
   ui.productGrid.innerHTML = productList
     .map(
-      p => `
+      p => {
+    const stock = getStockBadgeConfig(getProductStockStatus(p));
+    return `
     <article class="product-card">
       <img src="${escapeAttribute(p.img)}" alt="${escapeAttribute(p.name)}" onerror="handleImgError(this)" />
       <h3>${escapeHtml(p.name)}</h3>
       <p>${escapeHtml(p.desc)}</p>
-      <div class="stock-badge ${p.inStock === false ? "agotado" : "disponible"}">${p.inStock === false ? "Agotado" : "Disponible"}</div>
+      <div class="stock-badge ${stock.className}">${stock.label}</div>
       <div class="price">${formatMoney(p.price)}</div>
-      <button class="btn ${p.inStock === false ? "btn-out-stock" : ""}" data-add-cart="${escapeAttribute(p.id)}" ${p.inStock === false ? "disabled" : ""}>
-        ${p.inStock === false ? "Agotado" : "Agregar al carrito"}
+      <button class="btn ${stock.canAddToCart ? "" : "btn-out-stock"}" data-add-cart="${escapeAttribute(p.id)}" ${stock.canAddToCart ? "" : "disabled"}>
+        ${stock.buttonLabel}
       </button>
     </article>
-  `,
+  `;
+      },
     )
     .join("");
 
@@ -458,7 +489,7 @@ function applyFilters() {
 }
 
 function renderCartDrawer() {
-  if (!ui.cartItems || !ui.cartSubtotal || !ui.cartDiscount || !ui.cartShipping || !ui.cartTotal) return;
+  if (!ui.cartItems || !ui.cartSubtotal || !ui.cartDiscount || !ui.cartTotal) return;
 
   const cartItems = getCartItems();
 
@@ -488,15 +519,19 @@ function renderCartDrawer() {
   const totals = calculateCartTotal();
   ui.cartSubtotal.textContent = formatMoney(totals.subtotal);
   ui.cartDiscount.textContent = formatMoney(totals.discountAmount);
-  ui.cartShipping.textContent = formatMoney(totals.shipping);
   ui.cartTotal.textContent = formatMoney(totals.total);
 }
 
 function addToCart(productId) {
   const product = products.find(p => p.id === productId);
   if (!product) return;
-  if (product.inStock === false) {
-    showToast(`${product.name} está agotado por ahora.`, "error");
+  const stockStatus = getProductStockStatus(product);
+  if (stockStatus !== "disponible") {
+    if (stockStatus === "proximo_ingreso") {
+      showToast(`${product.name} tendrá próximo ingreso.`, "error");
+    } else {
+      showToast(`${product.name} está agotado por ahora.`, "error");
+    }
     return;
   }
   addItemToCart(productId, 1);
@@ -672,6 +707,7 @@ function resetProductForm() {
 }
 
 function normalizeProduct(raw, fallbackId) {
+  const stockStatus = normalizeStockStatus(raw.stockStatus || (raw.inStock === false ? "agotado" : "disponible"));
   return {
     id: String(raw.id || fallbackId),
     name: raw.name || "Producto",
@@ -679,7 +715,8 @@ function normalizeProduct(raw, fallbackId) {
     category: (raw.category || "accesorios").toLowerCase().trim(),
     desc: raw.desc || "",
     img: sanitizeImageUrl(raw.img),
-    inStock: raw.inStock !== false,
+    inStock: stockStatus === "disponible",
+    stockStatus,
     active: raw.active !== false,
   };
 }
@@ -694,18 +731,21 @@ function renderAdminProducts() {
 
   const productRows = listedProducts
     .map(
-      p => `
+      p => {
+      const stockStatus = getProductStockStatus(p);
+      return `
       <div class="admin-product-row" data-product-row-id="${p.id}">
         <img src="${escapeAttribute(p.img)}" alt="${escapeAttribute(p.name)}" onerror="handleImgError(this)" />
         <div class="admin-product-main">
           <strong>${escapeHtml(p.name)}</strong>
           <div>${formatMoney(p.price)} - ${escapeHtml(p.category.toUpperCase())}</div>
-          <div class="stock-badge ${p.inStock === false ? "agotado" : "disponible"}">${p.inStock === false ? "Agotado" : "Disponible"}</div>
+          <div class="stock-badge ${getStockBadgeConfig(stockStatus).className}">${getStockBadgeConfig(stockStatus).label}</div>
           <div class="admin-quick-edit">
             <input type="number" min="0" step="100" value="${p.price}" data-quick-price />
             <select data-quick-stock>
-              <option value="disponible" ${p.inStock === false ? "" : "selected"}>Disponible</option>
-              <option value="agotado" ${p.inStock === false ? "selected" : ""}>Agotado</option>
+              <option value="disponible" ${stockStatus === "disponible" ? "selected" : ""}>Disponible</option>
+              <option value="agotado" ${stockStatus === "agotado" ? "selected" : ""}>Agotado</option>
+              <option value="proximo_ingreso" ${stockStatus === "proximo_ingreso" ? "selected" : ""}>Próximo ingreso</option>
             </select>
             <button class="btn secondary" data-quick-save-id="${escapeAttribute(p.id)}">Guardar rápido</button>
           </div>
@@ -715,7 +755,8 @@ function renderAdminProducts() {
           <button class="btn secondary" data-delete-id="${escapeAttribute(p.id)}">Eliminar</button>
         </div>
       </div>
-    `,
+    `;
+      },
     )
     .join("");
 
@@ -731,7 +772,7 @@ function renderAdminProducts() {
       ui.productPrice.value = product.price;
       syncAdminCategorySelect(product.category);
       ui.productDescription.value = product.desc;
-      if (ui.productStock) ui.productStock.value = product.inStock === false ? "agotado" : "disponible";
+      if (ui.productStock) ui.productStock.value = getProductStockStatus(product);
       window.scrollTo({ top: ui.adminPanel.offsetTop - 20, behavior: "smooth" });
     });
   });
@@ -745,7 +786,8 @@ function renderAdminProducts() {
       const priceInput = row?.querySelector("[data-quick-price]");
       const stockSelect = row?.querySelector("[data-quick-stock]");
       const newPrice = Number(priceInput?.value);
-      const inStock = stockSelect?.value !== "agotado";
+      const stockStatus = normalizeStockStatus(stockSelect?.value);
+      const inStock = stockStatus === "disponible";
 
       if (Number.isNaN(newPrice) || newPrice < 0) {
         showToast("Ingresa un precio válido en la edición rápida.", "error");
@@ -756,6 +798,7 @@ function renderAdminProducts() {
         await updateDoc(doc(db, "products", id), {
           price: newPrice,
           inStock,
+          stockStatus,
           updatedAt: serverTimestamp(),
         });
         showToast("Producto actualizado rápido correctamente.", "success");
@@ -911,7 +954,8 @@ function bindUIEvents() {
     const price = Number(ui.productPrice.value);
     const category = ui.productCategory.value.trim().toLowerCase();
     const desc = ui.productDescription.value.trim();
-    const inStock = ui.productStock.value !== "agotado";
+    const stockStatus = normalizeStockStatus(ui.productStock.value);
+    const inStock = stockStatus === "disponible";
     const imageUrl = normalizeImageUrl((ui.productImage.value || "").trim());
 
     if (!name || !category || !desc || Number.isNaN(price)) {
@@ -929,6 +973,7 @@ function bindUIEvents() {
           category,
           desc,
           inStock,
+          stockStatus,
           img: imageUrl || current?.img || FALLBACK_IMG,
           active: true,
           updatedAt: serverTimestamp(),
@@ -940,6 +985,7 @@ function bindUIEvents() {
           category,
           desc,
           inStock,
+          stockStatus,
           img: imageUrl || FALLBACK_IMG,
           active: true,
           createdAt: serverTimestamp(),

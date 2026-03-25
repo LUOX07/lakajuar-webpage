@@ -22,6 +22,7 @@ service cloud.firestore {
           "category",
           "desc",
           "inStock",
+          "stockStatus",
           "img",
           "active",
           "createdAt",
@@ -40,6 +41,9 @@ service cloud.firestore {
         && data.img is string
         && data.img.size() <= 2048
         && data.inStock is bool
+        && (!("stockStatus" in data)
+          || (data.stockStatus is string
+            && data.stockStatus in ["disponible", "agotado", "proximo_ingreso"]))
         && data.active is bool;
     }
 

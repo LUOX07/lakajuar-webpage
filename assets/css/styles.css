@@ -690,6 +690,12 @@ body::before {
     border: 1px solid rgba(191, 76, 76, 0.32);
 }
 
+.stock-badge.proximo-ingreso {
+    background: rgba(219, 153, 57, 0.16);
+    color: #9c5f15;
+    border: 1px solid rgba(219, 153, 57, 0.34);
+}
+
 .btn-out-stock,
 .btn-out-stock:hover {
     background: linear-gradient(135deg, #bcaea0, #a19386);
