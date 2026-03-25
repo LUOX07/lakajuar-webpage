@@ -20,6 +20,7 @@ service cloud.firestore {
           "name",
           "price",
           "category",
+          "subcategory",
           "desc",
           "inStock",
           "stockStatus",
@@ -36,6 +37,10 @@ service cloud.firestore {
         && data.category is string
         && data.category.size() > 0
         && data.category.size() <= 50
+        && (!("subcategory" in data)
+          || (data.subcategory is string
+            && data.subcategory.size() > 0
+            && data.subcategory.size() <= 50))
         && data.desc is string
         && data.desc.size() <= 1000
         && data.img is string

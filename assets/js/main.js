@@ -30,6 +30,12 @@ import {
 const FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'400'%20height%3D'300'%20viewBox%3D'0%200%20400%20300'%3E%3Crect%20width%3D'400'%20height%3D'300'%20fill%3D'%23f5ede3'%2F%3E%3Ctext%20x%3D'200'%20y%3D'160'%20font-family%3D'sans-serif'%20font-size%3D'18'%20fill%3D'%23b08060'%20text-anchor%3D'middle'%3ESin%20imagen%3C%2Ftext%3E%3C%2Fsvg%3E";
 const STORE_WHATSAPP_FALLBACK = "595984475612";
 const IS_LOCAL_DEV = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const BASE_CATEGORIES = ["joyas", "cases", "accesorios"];
+const SUBCATEGORY_PRESETS = {
+  joyas: ["aros", "pulseras", "anillos", "collares", "dijes", "tobilleras"],
+  cases: ["flores", "anime", "naturaleza", "minimalista", "marmol", "glitter", "kawaii", "gaming", "street", "personalizados"],
+  accesorios: ["cargadores", "cables", "soportes", "power-banks", "airpods", "organizadores"],
+};
 
 let runtimeConfig = null;
 let app = null;
@@ -40,6 +46,7 @@ let storage = null;
 const DEFAULT_PRODUCTS = [
   {
     category: "joyas",
+    subcategory: "collares",
     name: "Collar LAKAJUAR",
     price: 60000,
     img: "assets/images/products/collar-lakajuar.jpg",
@@ -48,6 +55,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     category: "joyas",
+    subcategory: "aros",
     name: "Aros LAKAJUAR",
     price: 10000,
     img: "assets/images/products/aros-lakajuar.jpg",
@@ -56,6 +64,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     category: "joyas",
+    subcategory: "aros",
     name: "Set de aros mini",
     price: 10000,
     img: "assets/images/products/aros-lakajuar.jpg",
@@ -64,6 +73,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     category: "cases",
+    subcategory: "minimalista",
     name: "Case transparente",
     price: 18000,
     img: "https://via.placeholder.com/400x300?text=Case+transparente",
@@ -72,6 +82,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     category: "accesorios",
+    subcategory: "cargadores",
     name: "Cargador rápido USB-C",
     price: 25000,
     img: "https://via.placeholder.com/400x300?text=Cargador+USB-C",
@@ -84,6 +95,7 @@ const ui = {
   searchInput: document.getElementById("search-input"),
   productGrid: document.getElementById("product-grid"),
   categoryTabs: document.getElementById("category-tabs"),
+  subcategoryTabs: document.getElementById("subcategory-tabs"),
   cartCount: document.getElementById("cart-count"),
   floatingCartCount: document.getElementById("floating-cart-count"),
   cartStatus: document.querySelector(".cart-status"),
@@ -120,6 +132,7 @@ const ui = {
   productName: document.getElementById("product-name"),
   productPrice: document.getElementById("product-price"),
   productCategory: document.getElementById("product-category"),
+  productSubcategory: document.getElementById("product-subcategory"),
   productDescription: document.getElementById("product-description"),
   productStock: document.getElementById("product-stock"),
   productImage: document.getElementById("product-image"),
@@ -133,6 +146,7 @@ let products = [];
 let cart = JSON.parse(localStorage.getItem("lakajuarCart") || "[]");
 const activeDiscount = 0;
 let currentCategory = "joyas";
+let currentSubcategory = "todos";
 let isRegisterMode = false;
 let currentUserProfile = null;
 let toastTimer = null;
@@ -302,19 +316,69 @@ function slugify(text) {
 }
 
 function preferredCategoryOrder(categories) {
-  const preferred = ["joyas", "cases", "accesorios"];
-  const existing = [...new Set(categories.map(c => c.toLowerCase()))];
-  const sorted = preferred.filter(c => existing.includes(c));
-  const extras = existing.filter(c => !preferred.includes(c)).sort();
-  return [...sorted, ...extras];
+  const existing = [...new Set(categories.map(c => String(c || "").toLowerCase().trim()).filter(Boolean))];
+  const extras = existing.filter(c => !BASE_CATEGORIES.includes(c)).sort();
+  return [...BASE_CATEGORIES, ...extras];
+}
+
+function normalizeCategory(value) {
+  const normalized = String(value || "").toLowerCase().trim();
+  if (!normalized) return BASE_CATEGORIES[0];
+  return normalized;
+}
+
+function getSubcategoryOptions(category) {
+  const normalizedCategory = normalizeCategory(category);
+  const base = SUBCATEGORY_PRESETS[normalizedCategory] || ["general"];
+  const dynamic = products
+    .filter(product => normalizeCategory(product.category) === normalizedCategory)
+    .map(product => slugify(product.subcategory || ""))
+    .filter(Boolean);
+
+  const options = [...new Set([...base, ...dynamic])];
+  return options.length ? options : ["general"];
+}
+
+function formatSubcategoryLabel(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "General";
+  if (normalized === "power-banks") return "Power Banks";
+  if (normalized === "airpods") return "AirPods";
+
+  return normalized
+    .replace(/[-_]/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map(word => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(" ");
+}
+
+function normalizeSubcategoryForCategory(value, category) {
+  const allowed = getSubcategoryOptions(category);
+  const normalized = slugify(value || "");
+  if (normalized && allowed.includes(normalized)) return normalized;
+  return allowed[0];
+}
+
+function syncAdminSubcategorySelect(selectedValue = "") {
+  if (!ui.productSubcategory) return;
+
+  const category = normalizeCategory(ui.productCategory?.value || currentCategory);
+  const options = getSubcategoryOptions(category);
+  const normalizedSelected = normalizeSubcategoryForCategory(selectedValue || ui.productSubcategory.value, category);
+
+  ui.productSubcategory.innerHTML = options
+    .map(option => `<option value="${escapeAttribute(option)}">${escapeHtml(formatSubcategoryLabel(option))}</option>`)
+    .join("");
+
+  ui.productSubcategory.value = normalizedSelected;
 }
 
 function syncAdminCategorySelect(selectedValue = "") {
   if (!ui.productCategory) return;
 
-  const baseCategories = ["joyas", "cases", "accesorios"];
   const dynamicCategories = preferredCategoryOrder(products.map(p => p.category));
-  const allCategories = dynamicCategories.length ? dynamicCategories : baseCategories;
+  const allCategories = dynamicCategories.length ? dynamicCategories : BASE_CATEGORIES;
   const normalizedSelected = String(selectedValue || "").toLowerCase().trim();
 
   if (normalizedSelected && !allCategories.includes(normalizedSelected)) {
@@ -327,6 +391,7 @@ function syncAdminCategorySelect(selectedValue = "") {
 
   const nextValue = normalizedSelected || ui.productCategory.value || allCategories[0];
   ui.productCategory.value = allCategories.includes(nextValue) ? nextValue : allCategories[0];
+  syncAdminSubcategorySelect();
 }
 
 function ensureCartIntegrity() {
@@ -459,6 +524,11 @@ function renderCategoryTabs() {
     currentCategory = categories[0];
   }
 
+  const subcategoryOptions = getSubcategoryOptions(currentCategory);
+  if (currentSubcategory !== "todos" && !subcategoryOptions.includes(currentSubcategory)) {
+    currentSubcategory = "todos";
+  }
+
   ui.categoryTabs.innerHTML = categories
     .map(
       cat => `
@@ -472,7 +542,33 @@ function renderCategoryTabs() {
   ui.categoryTabs.querySelectorAll(".tab-button").forEach(tab => {
     tab.addEventListener("click", () => {
       currentCategory = tab.getAttribute("data-cat") || "joyas";
+      currentSubcategory = "todos";
       renderCategoryTabs();
+      applyFilters();
+    });
+  });
+
+  renderSubcategoryTabs();
+}
+
+function renderSubcategoryTabs() {
+  if (!ui.subcategoryTabs) return;
+  const subcategories = getSubcategoryOptions(currentCategory);
+
+  ui.subcategoryTabs.innerHTML = ["todos", ...subcategories]
+    .map(
+      subcategory => `
+      <button class="subtab-button ${subcategory === currentSubcategory ? "active" : ""}" data-subcat="${escapeAttribute(subcategory)}" role="tab">
+        ${escapeHtml(subcategory === "todos" ? "Todos" : formatSubcategoryLabel(subcategory))}
+      </button>
+    `,
+    )
+    .join("");
+
+  ui.subcategoryTabs.querySelectorAll(".subtab-button").forEach(tab => {
+    tab.addEventListener("click", () => {
+      currentSubcategory = tab.getAttribute("data-subcat") || "todos";
+      renderSubcategoryTabs();
       applyFilters();
     });
   });
@@ -482,8 +578,13 @@ function applyFilters() {
   const queryText = (ui.searchInput?.value || "").trim().toLowerCase();
   const filtered = products.filter(p => {
     const matchCategory = p.category === currentCategory;
-    const matchQuery = !queryText || p.name.toLowerCase().includes(queryText) || p.desc.toLowerCase().includes(queryText);
-    return matchCategory && matchQuery;
+    const productSubcategory = normalizeSubcategoryForCategory(p.subcategory, p.category);
+    const matchSubcategory = currentSubcategory === "todos" || productSubcategory === currentSubcategory;
+    const matchQuery = !queryText
+      || p.name.toLowerCase().includes(queryText)
+      || p.desc.toLowerCase().includes(queryText)
+      || formatSubcategoryLabel(productSubcategory).toLowerCase().includes(queryText);
+    return matchCategory && matchSubcategory && matchQuery;
   });
   renderProducts(filtered);
 }
@@ -704,15 +805,19 @@ function resetProductForm() {
   if (ui.productId) ui.productId.value = "";
   if (ui.productStock) ui.productStock.value = "disponible";
   syncAdminCategorySelect("joyas");
+  syncAdminSubcategorySelect();
 }
 
 function normalizeProduct(raw, fallbackId) {
   const stockStatus = normalizeStockStatus(raw.stockStatus || (raw.inStock === false ? "agotado" : "disponible"));
+  const category = normalizeCategory(raw.category || "accesorios");
+  const subcategory = normalizeSubcategoryForCategory(raw.subcategory, category);
   return {
     id: String(raw.id || fallbackId),
     name: raw.name || "Producto",
     price: Number(raw.price || 0),
-    category: (raw.category || "accesorios").toLowerCase().trim(),
+    category,
+    subcategory,
     desc: raw.desc || "",
     img: sanitizeImageUrl(raw.img),
     inStock: stockStatus === "disponible",
@@ -726,7 +831,12 @@ function renderAdminProducts() {
 
   const queryText = adminSearchQuery.trim().toLowerCase();
   const listedProducts = queryText
-    ? products.filter(item => item.name.toLowerCase().includes(queryText) || item.category.toLowerCase().includes(queryText))
+    ? products.filter(item => {
+      const subcategoryLabel = formatSubcategoryLabel(item.subcategory).toLowerCase();
+      return item.name.toLowerCase().includes(queryText)
+        || item.category.toLowerCase().includes(queryText)
+        || subcategoryLabel.includes(queryText);
+    })
     : products;
 
   const productRows = listedProducts
@@ -738,7 +848,7 @@ function renderAdminProducts() {
         <img src="${escapeAttribute(p.img)}" alt="${escapeAttribute(p.name)}" onerror="handleImgError(this)" />
         <div class="admin-product-main">
           <strong>${escapeHtml(p.name)}</strong>
-          <div>${formatMoney(p.price)} - ${escapeHtml(p.category.toUpperCase())}</div>
+          <div>${formatMoney(p.price)} - ${escapeHtml(p.category.toUpperCase())} / ${escapeHtml(formatSubcategoryLabel(p.subcategory))}</div>
           <div class="stock-badge ${getStockBadgeConfig(stockStatus).className}">${getStockBadgeConfig(stockStatus).label}</div>
           <div class="admin-quick-edit">
             <input type="number" min="0" step="100" value="${p.price}" data-quick-price />
@@ -771,6 +881,7 @@ function renderAdminProducts() {
       ui.productName.value = product.name;
       ui.productPrice.value = product.price;
       syncAdminCategorySelect(product.category);
+      syncAdminSubcategorySelect(product.subcategory);
       ui.productDescription.value = product.desc;
       if (ui.productStock) ui.productStock.value = getProductStockStatus(product);
       window.scrollTo({ top: ui.adminPanel.offsetTop - 20, behavior: "smooth" });
@@ -833,6 +944,9 @@ function normalizeImageUrl(url) {
 
 function bindUIEvents() {
   ui.searchInput?.addEventListener("input", applyFilters);
+  ui.productCategory?.addEventListener("change", () => {
+    syncAdminSubcategorySelect();
+  });
   ui.adminSearchInput?.addEventListener("input", () => {
     adminSearchQuery = (ui.adminSearchInput?.value || "").toLowerCase();
     renderAdminProducts();
@@ -952,7 +1066,8 @@ function bindUIEvents() {
     const id = ui.productId.value;
     const name = ui.productName.value.trim();
     const price = Number(ui.productPrice.value);
-    const category = ui.productCategory.value.trim().toLowerCase();
+    const category = normalizeCategory(ui.productCategory.value);
+    const subcategory = normalizeSubcategoryForCategory(ui.productSubcategory?.value, category);
     const desc = ui.productDescription.value.trim();
     const stockStatus = normalizeStockStatus(ui.productStock.value);
     const inStock = stockStatus === "disponible";
@@ -971,6 +1086,7 @@ function bindUIEvents() {
           name,
           price,
           category,
+          subcategory,
           desc,
           inStock,
           stockStatus,
@@ -983,6 +1099,7 @@ function bindUIEvents() {
           name,
           price,
           category,
+          subcategory,
           desc,
           inStock,
           stockStatus,

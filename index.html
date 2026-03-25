@@ -59,6 +59,7 @@
     <section class="shop-section" aria-label="Productos">
       <h2>Productos</h2>
       <div id="category-tabs" class="category-tabs" role="tablist" aria-label="Categorías"></div>
+      <div id="subcategory-tabs" class="subcategory-tabs" role="tablist" aria-label="Subcategorías"></div>
       <div class="product-grid" id="product-grid"></div>
     </section>
 
@@ -83,6 +84,9 @@
               <option value="cases">Cases</option>
               <option value="accesorios">Accesorios</option>
             </select>
+
+            <label for="product-subcategory">Subcategoría</label>
+            <select id="product-subcategory" required></select>
 
             <label for="product-description">Descripción</label>
             <textarea id="product-description" rows="3" required></textarea>
