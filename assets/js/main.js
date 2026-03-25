@@ -133,6 +133,7 @@ const ui = {
   productPrice: document.getElementById("product-price"),
   productCategory: document.getElementById("product-category"),
   productSubcategory: document.getElementById("product-subcategory"),
+  productSubcategoryChips: document.getElementById("product-subcategory-chips"),
   productDescription: document.getElementById("product-description"),
   productStock: document.getElementById("product-stock"),
   productImage: document.getElementById("product-image"),
@@ -360,6 +361,34 @@ function normalizeSubcategoryForCategory(value, category) {
   return allowed[0];
 }
 
+function renderAdminSubcategoryChips(options, selectedValue) {
+  if (!ui.productSubcategoryChips) return;
+
+  ui.productSubcategoryChips.innerHTML = options
+    .map(
+      option => `
+      <button
+        type="button"
+        class="admin-subcategory-chip ${option === selectedValue ? "active" : ""}"
+        data-chip-subcategory="${escapeAttribute(option)}"
+        aria-pressed="${option === selectedValue ? "true" : "false"}"
+      >
+        ${escapeHtml(formatSubcategoryLabel(option))}
+      </button>
+    `,
+    )
+    .join("");
+
+  ui.productSubcategoryChips.querySelectorAll("[data-chip-subcategory]").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const selected = chip.getAttribute("data-chip-subcategory");
+      if (!selected || !ui.productSubcategory) return;
+      ui.productSubcategory.value = selected;
+      renderAdminSubcategoryChips(options, selected);
+    });
+  });
+}
+
 function syncAdminSubcategorySelect(selectedValue = "") {
   if (!ui.productSubcategory) return;
 
@@ -372,6 +401,7 @@ function syncAdminSubcategorySelect(selectedValue = "") {
     .join("");
 
   ui.productSubcategory.value = normalizedSelected;
+  renderAdminSubcategoryChips(options, normalizedSelected);
 }
 
 function syncAdminCategorySelect(selectedValue = "") {

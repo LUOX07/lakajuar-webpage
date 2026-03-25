@@ -263,6 +263,45 @@ body::before {
     font-size: 0.95rem;
 }
 
+#product-subcategory {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 1px;
+    height: 1px;
+}
+
+.admin-subcategory-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 2px 0 8px;
+}
+
+.admin-subcategory-chip {
+    border: 1px solid #d9b89b;
+    background: #fff;
+    color: #6b4424;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-subcategory-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(102, 61, 30, 0.14);
+}
+
+.admin-subcategory-chip.active {
+    background: linear-gradient(125deg, #f6d8be, #e9b98f);
+    color: #4f2d14;
+    border-color: #cf925f;
+    box-shadow: 0 8px 16px rgba(180, 114, 67, 0.26);
+}
+
 .admin-tools {
     margin: 2px 0 16px;
     display: grid;
