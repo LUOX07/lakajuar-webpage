@@ -60,30 +60,18 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == userId);
 
-      allow create: if signedIn()
-        && request.auth.uid == userId
+      allow create, update: if isAdmin()
         && request.resource.data.keys().hasOnly(["uid", "name", "email", "role", "createdAt"])
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.uid == userId
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() <= 160
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 120
-        && request.resource.data.role == "cliente";
-
-      allow update: if isAdmin() || (
-        signedIn()
-        && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(["uid", "name", "email", "role", "createdAt"])
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.email == resource.data.email
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 120
-      );
+        && request.resource.data.role in ["admin"];
 
       allow delete: if false;
     }

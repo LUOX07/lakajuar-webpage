@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
@@ -11,7 +10,6 @@ import {
   collection,
   doc,
   getDoc,
-  setDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -117,15 +115,12 @@ const ui = {
   authCloseBtn: document.getElementById("auth-close-btn"),
   authTitle: document.getElementById("auth-title"),
   authForm: document.getElementById("auth-form"),
-  authNameGroup: document.getElementById("auth-name-group"),
-  authName: document.getElementById("auth-name"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
+  authAdminCode: document.getElementById("auth-admin-code"),
   authTogglePassword: document.getElementById("auth-toggle-password"),
   authSubmitBtn: document.getElementById("auth-submit-btn"),
   authMessage: document.getElementById("auth-message"),
-  loginModeBtn: document.getElementById("auth-mode-login"),
-  registerModeBtn: document.getElementById("auth-mode-register"),
   adminPanel: document.getElementById("admin-panel"),
   productForm: document.getElementById("product-form"),
   productId: document.getElementById("product-id"),
@@ -148,7 +143,6 @@ let cart = JSON.parse(localStorage.getItem("lakajuarCart") || "[]");
 const activeDiscount = 0;
 let currentCategory = "joyas";
 let currentSubcategory = "todos";
-let isRegisterMode = false;
 let currentUserProfile = null;
 let toastTimer = null;
 let adminSearchQuery = "";
@@ -698,25 +692,29 @@ function showToast(message, type = "success") {
   }, 3000);
 }
 
-function getFriendlyAuthError(errorCode, registerMode) {
+function getFriendlyAuthError(errorCode) {
   switch (errorCode) {
-    case "auth/email-already-in-use":
-      return registerMode
-        ? "Ese correo ya fue registrado. Inicia sesion con esa cuenta o usa otro correo."
-        : "Ese correo ya existe, pero no pudimos iniciar sesion con los datos ingresados.";
     case "auth/invalid-credential":
     case "auth/invalid-login-credentials":
       return "Correo o contrasena incorrectos. Verifica tus datos e intenta de nuevo.";
     case "auth/invalid-email":
       return "El correo ingresado no es valido.";
-    case "auth/weak-password":
-      return "La contrasena es muy debil. Usa al menos 6 caracteres.";
     case "auth/too-many-requests":
       return "Demasiados intentos. Espera un momento e intenta nuevamente.";
     case "auth/network-request-failed":
       return "No se pudo conectar con Firebase. Revisa tu internet e intenta otra vez.";
     case "permission-denied":
       return "Tu cuenta no tiene permisos para esta accion.";
+    case "admin-code-required":
+      return "Ingresa el codigo secreto de administracion.";
+    case "admin-code-invalid":
+      return "El codigo secreto no es correcto.";
+    case "admin-email-not-allowed":
+      return "Este correo no esta autorizado para entrar al panel admin.";
+    case "admin-profile-missing":
+      return "La cuenta ingreso, pero no tiene perfil admin configurado en Firestore.";
+    case "admin-role-required":
+      return "Esta cuenta no tiene rol admin. Se cerró la sesion por seguridad.";
     default:
       return `Error: ${errorCode || "No se pudo completar la accion."}`;
   }
@@ -739,18 +737,13 @@ function getFriendlyDataError(error) {
   return `No se pudo completar la operacion (${code || "error-desconocido"}).`;
 }
 
-function setAuthMode(registerMode) {
-  isRegisterMode = registerMode;
-  if (!ui.authTitle || !ui.authSubmitBtn || !ui.authName || !ui.loginModeBtn || !ui.registerModeBtn) return;
+function configureAdminAuthUi() {
+  if (!ui.authTitle || !ui.authSubmitBtn || !ui.authPassword || !ui.authAdminCode) return;
 
-  ui.authTitle.textContent = registerMode ? "Crear cuenta cliente" : "Iniciar sesión";
-  ui.authSubmitBtn.textContent = registerMode ? "Crear cuenta" : "Entrar";
-  ui.authName.required = registerMode;
-  ui.authNameGroup?.classList.toggle("hidden", !registerMode);
-  ui.authPassword.setAttribute("autocomplete", registerMode ? "new-password" : "current-password");
-
-  ui.loginModeBtn.classList.toggle("secondary", registerMode);
-  ui.registerModeBtn.classList.toggle("secondary", !registerMode);
+  ui.authTitle.textContent = "Acceso administrador";
+  ui.authSubmitBtn.textContent = "Entrar al panel";
+  ui.authPassword.setAttribute("autocomplete", "current-password");
+  ui.authAdminCode.required = true;
 }
 
 function openAuthModal() {
@@ -768,48 +761,28 @@ function closeAuthModal() {
   showAuthMessage("");
 }
 
-async function upsertUserProfile(user, displayName = "") {
+async function fetchUserProfile(user) {
   const userRef = doc(db, "users", user.uid);
-  const existing = await getDoc(userRef);
-
-  if (!existing.exists()) {
-    await setDoc(userRef, {
-      uid: user.uid,
-      name: displayName || user.email,
-      email: user.email,
-      role: "cliente",
-      createdAt: serverTimestamp(),
-    });
+  const snapshot = await getDoc(userRef);
+  if (!snapshot.exists()) {
+    throw new Error("admin-profile-missing");
   }
 
-  const latest = await getDoc(userRef);
-  currentUserProfile = latest.exists() ? latest.data() : { role: "cliente", email: user.email };
-}
-
-async function ensureUserProfile(user, displayName = "") {
-  try {
-    await upsertUserProfile(user, displayName);
-  } catch {
-    // If Firestore rules block profile read/write, keep auth session alive with a safe fallback role.
-    currentUserProfile = {
-      uid: user.uid,
-      email: user.email,
-      role: "cliente",
-    };
-  }
+  currentUserProfile = snapshot.data();
+  return currentUserProfile;
 }
 
 function updateAuthUI() {
   const user = auth.currentUser;
   const isLogged = !!user;
-  const role = currentUserProfile?.role || "cliente";
+  const role = currentUserProfile?.role || "";
 
   ui.authOpenBtn?.classList.toggle("hidden", isLogged);
   ui.authLogoutBtn?.classList.toggle("hidden", !isLogged);
 
   if (ui.authRoleBadge) {
     if (isLogged) {
-      ui.authRoleBadge.textContent = role === "admin" ? "Administrador" : "Cliente";
+      ui.authRoleBadge.textContent = role === "admin" ? "Administrador" : "Sin acceso";
       ui.authRoleBadge.classList.remove("hidden");
     } else {
       ui.authRoleBadge.classList.add("hidden");
@@ -820,6 +793,38 @@ function updateAuthUI() {
   if (ui.adminPanel) {
     ui.adminPanel.classList.toggle("hidden", role !== "admin");
   }
+}
+
+async function verifyAdminAccessCode(email, code) {
+  const response = await fetch("/api/verify-admin-access", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({ email, code }),
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(payload?.error || "admin-code-invalid");
+  }
+
+  return payload;
+}
+
+async function requireAdminSession(user) {
+  const profile = await fetchUserProfile(user);
+  if (profile?.role !== "admin") {
+    throw new Error("admin-role-required");
+  }
+  return profile;
 }
 
 async function uploadProductImageIfNeeded(file) {
@@ -1033,9 +1038,6 @@ function bindUIEvents() {
     await signOut(auth);
   });
 
-  ui.loginModeBtn?.addEventListener("click", () => setAuthMode(false));
-  ui.registerModeBtn?.addEventListener("click", () => setAuthMode(true));
-
   ui.authTogglePassword?.addEventListener("click", () => {
     const isHidden = ui.authPassword.type === "password";
     ui.authPassword.type = isHidden ? "text" : "password";
@@ -1053,31 +1055,25 @@ function bindUIEvents() {
 
     const email = ui.authEmail?.value?.trim();
     const password = ui.authPassword?.value;
-    const name = ui.authName?.value?.trim();
+    const adminCode = ui.authAdminCode?.value?.trim();
 
-    if (!email || !password) {
-      showAuthMessage("Completa correo y contraseña.", true);
+    if (!email || !password || !adminCode) {
+      showAuthMessage("Completa correo, contrasena y codigo secreto.", true);
       return;
     }
 
     try {
-      if (isRegisterMode) {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await ensureUserProfile(cred.user, name || "Cliente");
-        showAuthMessage("Cuenta cliente creada correctamente.");
-        showToast("Cuenta creada correctamente. Bienvenido a LAKAJUAR.", "success");
-      } else {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        await ensureUserProfile(cred.user);
-        showAuthMessage("Ingreso correcto.");
-        showToast("Ingreso correcto. Bienvenido nuevamente.", "success");
-      }
+      await verifyAdminAccessCode(email, adminCode);
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      await requireAdminSession(cred.user);
+      showAuthMessage("Ingreso admin correcto.");
+      showToast("Panel admin desbloqueado correctamente.", "success");
       setTimeout(closeAuthModal, 600);
     } catch (error) {
-      if (error?.code === "auth/email-already-in-use" && isRegisterMode) {
-        setAuthMode(false);
+      if (auth.currentUser) {
+        await signOut(auth).catch(() => {});
       }
-      showAuthMessage(getFriendlyAuthError(error?.code, isRegisterMode), true);
+      showAuthMessage(getFriendlyAuthError(error?.code || error?.message), true);
     }
   });
 
@@ -1221,9 +1217,15 @@ function attachAuthObserver() {
   onAuthStateChanged(auth, async user => {
     if (user) {
       try {
-        await upsertUserProfile(user);
-      } catch {
-        currentUserProfile = { email: user.email, role: "cliente" };
+        await requireAdminSession(user);
+      } catch (error) {
+        currentUserProfile = null;
+        updateAuthUI();
+        renderAdminProducts();
+        await signOut(auth).catch(() => {});
+        showAuthMessage(getFriendlyAuthError(error?.message || error?.code), true);
+        showToast("Solo el admin puede acceder al panel.", "error");
+        return;
       }
     } else {
       currentUserProfile = null;
@@ -1236,7 +1238,7 @@ function attachAuthObserver() {
 
 async function bootstrap() {
   bindUIEvents();
-  setAuthMode(false);
+  configureAdminAuthUi();
 
   try {
     await loadRuntimeConfig();

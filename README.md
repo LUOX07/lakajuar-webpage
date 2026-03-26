@@ -89,6 +89,18 @@ Admin access is no longer determined by a public frontend email list. The authen
 
 Set that role directly in Firestore Console for the intended admin user if needed.
 
+### Admin-only access
+Client self-registration is disabled. The admin modal now requires:
+
+1. Admin email/password in Firebase Authentication
+2. A matching `users/{uid}` Firestore document with `role: "admin"`
+3. A server-side access code validated by the Cloudflare Pages Function `functions/api/verify-admin-access.js`
+
+Add these Cloudflare Pages environment variables before deploying:
+
+- `ADMIN_EMAIL`: admin email allowed to log in
+- `ADMIN_ACCESS_CODE`: secret code required in the admin modal
+
 ## Contributing
 Contributions are welcome! Please submit a pull request or open an issue for any enhancements or bug fixes.
 
